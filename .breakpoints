@@ -1,0 +1,20 @@
+{
+  "files": {
+    "cogs/currency/data.json": [
+      {
+        "id": "7dd164a6-0652-4914-bf75-22aafc57eb75",
+        "line": 3,
+        "version": 111,
+        "index": 107
+      }
+    ],
+    "discord.py/setup.py": [
+      {
+        "id": "2fb3c8b7-6fdc-4fb0-8dee-f23efe40dacf",
+        "line": 88,
+        "version": 1,
+        "index": 2618
+      }
+    ]
+  }
+}

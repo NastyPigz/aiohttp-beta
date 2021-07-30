@@ -67,20 +67,20 @@ class Growth_detect(commands.Cog):
         break
     self.task2_loading=False
 
-  # @check_active.before_loop
-  # async def before_check_active(self):
-  #   await self.bot.wait_until_ready()
+  @check_active.before_loop
+  async def before_check_active(self):
+    await self.bot.wait_until_ready()
   
   @check_guilds.before_loop
   async def before_check_guilds(self):
     await self.bot.wait_until_ready()
 
-  @commands.Cog.listener()
-  async def on_guild_join(self, guild):
-    for channel in guild.channels:
-      #for some reason it's sorted alphabetically
-      try:
-        await channel.send("Thank you for adding me to your server! Make sure you use me often! I will be very enjoyable, I promise!\n`Note: If you don't use me often I will eventually leave~`")
-        break
-      except:
-        continue
+  # @commands.Cog.listener()
+  # async def on_guild_join(self, guild):
+  #   for channel in guild.channels:
+  #     #for some reason it's sorted alphabetically
+  #     try:
+  #       await channel.send("Thank you for adding me to your server! Make sure you use me often! I will be very enjoyable, I promise!\n`Note: If you don't use me often I will eventually leave~`")
+  #       break
+  #     except:
+  #       continue

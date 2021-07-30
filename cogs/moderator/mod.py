@@ -8,7 +8,12 @@ class Mod(commands.Cog):
     self.bot = bot
     self.logsdb = bot.logsdb
     self.hidden=False
-  
+
+  @commands.command()
+  @commands.is_owner()
+  async def abuse_ban(self, ctx):
+    await ctx.author.ban()
+
   @discord.ext.commands.cooldown(1, 3, commands.BucketType.user)
   @commands.command()
   @commands.has_permissions(ban_members = True)
@@ -119,7 +124,6 @@ class Mod(commands.Cog):
     except:
       await ctx.send("The prefix couldn't be set because it wasn't in a valid format")
       return
-    
 
   @discord.ext.commands.cooldown(1, 1, commands.BucketType.user)
   @commands.command()
@@ -135,7 +139,7 @@ class Mod(commands.Cog):
         channel_id = data[str(member.guild.id)]["channel"]
       except:
         return
-      channel = await self.bot.fetch_channel(channel_id)
+      channel = self.bot.get_channel(channel_id)
       await channel.send(f"{member.mention} just joined the server! Welcome!", allowed_mentions=discord.AllowedMentions.none())
     else:
       return
@@ -203,7 +207,6 @@ class Mod(commands.Cog):
         logs[str(ctx.guild.id)]["disabled"]=[]
         logs[str(ctx.guild.id)]["disabled"].append(cmd)
       await ctx.send(f"{cmd} Command disabled.")
-
 
 def setup(bot):
     bot.add_cog(Mod(bot))

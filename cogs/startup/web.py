@@ -16,6 +16,7 @@ class Webserver(commands.Cog):
         self.web_server.start()
         self.maindb = bot.maindb
         self.hidden=True
+        self.smdata = bot.smdata
 
         @routes.get('/')
         async def welcome(request):
@@ -45,6 +46,18 @@ class Webserver(commands.Cog):
             pass
           return web.Response(text='{"status": 200}\n')
         
+        @routes.get('/smd')
+        async def smd(request):
+          try:
+            user = request.headers.get('user')
+            if user is None:
+              raise Exception
+          except:
+            return web.json_response({"status": 404, "data":"One of the arguments were not satisfied."})
+          if self.smdata.get(str(user)) is None:
+            return web.json_response({"status": 404, "data": "None"})
+          return web.json_response({"status": 200, "data": self.smdata.get(str(user))})
+
         @routes.get('/api')
         async def api(request):
           try:

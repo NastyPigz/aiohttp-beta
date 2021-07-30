@@ -66,19 +66,29 @@ class ErrorHandler(commands.Cog):
         ctx.command.reset_cooldown(ctx)
         return
       elif isinstance(error, commands.MissingRequiredArgument):
-        # em=discord.Embed(
-        #   title="You're missing required arguments!",
-        #   description="{} - {}".format(str(ctx.command), help_menu[str(ctx.command)]["use"])
-        # )
-        # em.set_footer(text=help_menu[str(ctx.command)]["footer"])
-        # await ctx.send(embed=em)
-        await ctx.send_help(ctx.command)
+        string_ = '%s%s %s' % (
+          ctx.prefix, 
+          ctx.command.qualified_name, 
+          ctx.command.signature
+        )
+        embed=discord.Embed(title="You are missing required arguments for the command!", description=f"Format: `{string_}`")
+        await ctx.send(embed=embed)
         ctx.command.reset_cooldown(ctx)
         return
       elif isinstance(error, commands.CommandNotFound):
         return
+      elif isinstance(error, commands.BotMissingPermissions):
+        content_string=""
+        for i in error.missing_perms:
+          content_string+="`{}`, ".format(i)
+        await ctx.send("I am missing permissions!\n{}".format(content_string.rstrip(", ")))
+        ctx.command.reset_cooldown(ctx)
+        return
       elif isinstance(error, commands.MissingPermissions):
-        await ctx.send("You are missing required permissions!")
+        content_string=""
+        for i in error.missing_perms:
+          content_string+="`{}`, ".format(i)
+        await ctx.send("You are missing required permissions!\n{}".format(content_string.rstrip(", ")))
         ctx.command.reset_cooldown(ctx)
         return
       elif isinstance(error, commands.CheckFailure):
@@ -91,6 +101,12 @@ class ErrorHandler(commands.Cog):
           await ctx.send("I tried to delete, edit or fetch a message but it couldn't be reached. Please stop deleting my messages that are working in progress. Get some help.")
           return
         else:
+          try:
+            if error.original.code == 50013:
+              await ctx.send("Hmm looks like the floor here is made out of floor! I am missing permissions. To do one of the tasks.")
+              return
+          except:
+            pass
           traceb = ""
           traceblist = traceback.format_exception(type(error), error, error.__traceback__)
           for i in traceblist:

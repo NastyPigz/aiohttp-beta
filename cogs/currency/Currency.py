@@ -11,6 +11,7 @@ import datetime
 from discord_slash.utils import manage_components
 from discord_slash.model import ButtonStyle
 from typing import Optional, Union
+from handler import CapitalismConverter
 
 class Currency(commands.Cog):
   def __init__(self, bot):
@@ -97,7 +98,7 @@ class Currency(commands.Cog):
     elif message.lower() == "view":
       em=discord.Embed(
         title="Bitcoin Exchange rate",
-        description=f"**${exchange_rate} --- 1 BTC**"
+        description=f"**${exchange_rate:,} --- 1 BTC**"
       )
       await ctx.send(embed=em)
     elif message.lower() == "buy":
@@ -173,7 +174,7 @@ class Currency(commands.Cog):
           title="Invalid Input Given!"
         )
         await ctx.send(embed=embed)
-  
+
   @discord.ext.commands.cooldown(1, 1, commands.BucketType.user)
   @commands.command(aliases=["bal","balance"])
   async def coins(self, ctx, member: discord.Member=None):
@@ -193,11 +194,11 @@ class Currency(commands.Cog):
       )
       embed_Balance.add_field(
         name="Wallet",
-        value = wallet_amt
+        value = "{:,}".format(wallet_amt)
       )
       embed_Balance.add_field(
         name="Bank",
-        value = f"{bank_amt} / {bank_max}"
+        value = "{:,} / {:,}".format(bank_amt, bank_max)
       )
       await ctx.send(embed = embed_Balance)
       return True
@@ -219,11 +220,11 @@ class Currency(commands.Cog):
       )
       embed_Balance.add_field(
         name="Wallet",
-        value = wallet_amt
+        value = "{:,}".format(wallet_amt)
       )
       embed_Balance.add_field(
         name="Bank",
-        value = f"{bank_amt} / {bank_max}"
+        value = "{:,} / {:,}".format(bank_amt, bank_max)
       )
       await ctx.send(embed = embed_Balance)
       return True
@@ -255,7 +256,7 @@ class Currency(commands.Cog):
             await ctx.send("great job that's a valid response")
           else:
             await ctx.send("TERRIBLE! THAT'S NOT EVEN CLOSE!")
-        except TimeoutError:
+        except asyncio.TimeoutError:
           await ctx.reply("You're so slow! Terrible effort. I gave you 1 minute to do this easy job and you failed. You're not getting any money.")
         return
     elif job == "list":
@@ -429,8 +430,8 @@ class Currency(commands.Cog):
   
   @discord.ext.commands.cooldown(1, 15, commands.BucketType.user)
   @commands.command(aliases=["give"])
-  async def share(self, ctx,member:discord.Member,message:Optional[Union[float, str]]):
-    if type(message) == float:
+  async def share(self, ctx,member:discord.Member,message:Union[CapitalismConverter, str]):
+    if type(message) == int:
       message = str(int(message))
     if await self.profile_detect(ctx):
       return
@@ -449,11 +450,13 @@ class Currency(commands.Cog):
     share_amt=0
     pog=True if users[str(user.id)]["badges"]["Pog"] > 0 else False
     if not message.lower() == "max" and not message.lower() == "all":
-      share_amt=int(message)
+      try:
+        share_amt=int(message)
+      except:
+        await ctx.send("that's not a valid input!")
+        return
     elif message.lower() == "max" or message.lower() == "all":
       share_amt=users[str(user.id)]["wallet"]
-    else:
-      await ctx.send("that's not a valid input lmao")
     if share_amt > 0:
       if not share_amt>wallet_amt:
         if not pog:
@@ -463,7 +466,7 @@ class Currency(commands.Cog):
             title="Transcation Successful!",
             description=f"You gave {member} {round(share_amt*0.85)} CTC after a 15% tax rate."
           )
-          embed.set_footer(text="You lost: {}".format(share_amt))
+          embed.set_footer(text="You lost: {:,}".format(share_amt))
           await ctx.send(embed=embed)
         else:
           users[str(user.id)]["wallet"]-=share_amt
@@ -472,7 +475,7 @@ class Currency(commands.Cog):
             title="Transcation Successful!",
             description=f"You gave {member} {share_amt} CTC. You're pog so you get NO TAX."
           )
-          embed.set_footer(text="You lost: {}".format(share_amt))
+          embed.set_footer(text="You lost: {:,}".format(share_amt))
           await ctx.send(embed=embed)
       else:
         await ctx.send("You do not have that much amount in your wallet")
@@ -500,9 +503,9 @@ class Currency(commands.Cog):
         name = await self.bot.fetch_user(user["user_id"])
         username = name.name
       except:
-        username = "Clyde#"
+        username = "Clyde#0000"
       balance = user["balance"]
-      stuff+=f"`{username}` - {balance}\n"
+      stuff+=f"`{username}` - {balance:,}\n"
       index+=1
     em = discord.Embed(
       title="Top 10 riches people",
@@ -687,8 +690,8 @@ class Currency(commands.Cog):
   
   @discord.ext.commands.cooldown(1, 5, commands.BucketType.user)
   @commands.command(aliases=["gamble","bet"])
-  async def roll(self, ctx, message:Optional[Union[float, str]]):
-    if type(message)==float:
+  async def roll(self, ctx, message:Union[CapitalismConverter, str]):
+    if type(message)==int:
       message = str(int(message))
     if await self.profile_detect(ctx):
       return
@@ -732,7 +735,7 @@ class Currency(commands.Cog):
             users[str(user.id)]["wallet"]+=int(win_amt)
             em=discord.Embed(
               title="You won.",
-              description=f'Profit: {int(win_amt)}',
+              description='Profit: {:,}'.format(int(win_amt)),
               color=discord.Color.green()
             )
             em.add_field(
@@ -748,7 +751,7 @@ class Currency(commands.Cog):
             users[str(user.id)]["wallet"]-=int(gamble_amt*0.5)
             em=discord.Embed(
               title="You lost.",
-              description=f"Loss: {int(gamble_amt*0.5)}",
+              description='Loss: {:,}'.format(int(gamble_amt*0.5)),
               color=discord.Color.red()
             )
             em.add_field(
@@ -782,17 +785,16 @@ class Currency(commands.Cog):
   
   @discord.ext.commands.cooldown(1, 5, commands.BucketType.user)
   @commands.command(aliases=["roul"])
-  async def roulette(self, ctx,*, message:Optional[Union[float, str]]):
-    if type(message) == float:
+  async def roulette(self, ctx, message:Union[CapitalismConverter, str], message2):
+    if type(message) == int:
       message = str(int(message))
     if await self.profile_detect(ctx):
       return
     user=ctx.author
-    list1=message.split()
     users = self.maindb
     wallet_amt=users[str(user.id)]["wallet"]
     try:
-      bet_number=list1[1]
+      bet_number=int(message2)
     except:
       await ctx.send(f"Roulette example: `{ctx.prefix}roul 1000 1`")
       ctx.command.reset_cooldown(ctx)
@@ -800,16 +802,16 @@ class Currency(commands.Cog):
     if int(bet_number) > 12:
       await ctx.send("Don't bet bigger than 12!")
       return
-    if not list1[0].lower() == "max" and not list1[0].lower() == "all":
+    if not message.lower() == "max" and not message.lower() == "all":
       try:
-        gamble_amt=int(list1[0])
+        gamble_amt=int(message)
         if gamble_amt <= 19:
           await ctx.send("You must gamble at least 20 coins.")
           return
       except:
         await ctx.send("You can only gamble an amount of coins.")
         return
-    elif list1[0].lower() == "max" or list1[0].lower() == "all":
+    elif message.lower() == "max" or message.lower() == "all":
       if wallet_amt >= 250:
         gamble_amt=250
       elif wallet_amt <= 19:
@@ -840,7 +842,7 @@ class Currency(commands.Cog):
               users[str(user.id)]["wallet"]+=int(gamble_amt*0.5)
               em=discord.Embed(
                 title="You won! The win number is 0!",
-                description=f"Profit: {int(gamble_amt*0.5)}",
+                description='Profit: {:,}'.format(int(gamble_amt*0.5)),
                 color=discord.Color.green()
               )
               em.add_field(
@@ -905,20 +907,42 @@ class Currency(commands.Cog):
     
   @discord.ext.commands.cooldown(1, 3, commands.BucketType.user)
   @commands.command()
-  async def shop(self, ctx, message=None):
-    if message==None:
+  async def shop(self, ctx, message:Optional[Union[int, str]]=None):
+    if message==None or isinstance(message, int):
       em=discord.Embed(
         title="CTC SHOP",
         color=discord.Color.red()
       )
+      page=1 if not isinstance(message, int) else message
+      amt_ = 0
+      amnt = 0
       for key in shop_items.keys():
         val = shop_items[key]["showing"]
         if val==False:
+          continue
+        amnt+=1
+      page_total=amnt/5
+      if not page_total==int(page_total):
+        page_total = int(page_total)+1
+      else:
+        page_total = int(page_total)
+      if page > page_total:
+        await ctx.send("that page doesn't exist!")
+        return
+      for key in shop_items.keys():
+        val = shop_items[key]["showing"]
+        if val==False:
+          continue
+        amt_+=1
+        if amt_ > page*5:
+          break
+        if amt_ <= page*5-5:
           continue
         name=shop_items[key]["display"]
         price=shop_items[key]["price"]
         desc=shop_items[key]["description"]
         em.add_field(name=name, value=f"${price} | {desc}", inline=False)
+      em.set_footer(text="page {} of {}".format(page, page_total))
       await ctx.send(embed=em)
     else:
       item=None
@@ -956,7 +980,7 @@ class Currency(commands.Cog):
         )
         em.add_field(
           name= "Sellable",
-          value = shop_items[item]["sellable"],
+          value = "{} \n__Note:__ sell price is half".format(shop_items[item]["sellable"]),
           inline=False
         )
         em.add_field(
@@ -973,12 +997,10 @@ class Currency(commands.Cog):
   
   @discord.ext.commands.cooldown(1, 3, commands.BucketType.user)
   @commands.command()
-  async def buy(self, ctx, item, amount:Optional[Union[float, str]]=1.0):
-    if type(amount)==float:
-      amount = str(int(amount))
+  async def buy(self, ctx, item, amount:Optional[Union[CapitalismConverter, str]]=1):
     if await self.profile_detect(ctx):
       return
-    if amount > 0:
+    if isinstance(amount, str) or amount > 0:
       res= await self.buy_item(ctx.author,item, amount)
       if not res[0]:
         if res[1]==1:
@@ -993,9 +1015,7 @@ class Currency(commands.Cog):
   
   @discord.ext.commands.cooldown(1, 3, commands.BucketType.user)
   @commands.command()
-  async def use(self, ctx, item,amount:Optional[Union[float, str, None]]=None):
-    if type(amount)==float:
-      amount=str(int(amount))
+  async def use(self, ctx, item,amount:Optional[Union[CapitalismConverter, str, None]]=None):
     if await self.profile_detect(ctx):
       return
     users = self.maindb
@@ -1071,9 +1091,7 @@ class Currency(commands.Cog):
   
   @discord.ext.commands.cooldown(1, 3, commands.BucketType.user)
   @commands.command()
-  async def sell(self, ctx, item, amount:Optional[Union[float, str]]=1.0):
-    if type(amount) == float:
-      amount = str(int(amount))
+  async def sell(self, ctx, item, amount:Optional[Union[CapitalismConverter, str]]=1):
     if await self.profile_detect(ctx):
       return
     if amount > 0:
@@ -1332,7 +1350,7 @@ class Currency(commands.Cog):
           names="[`{}`]".format(shop_items[item_name]["name"][0])
         names = str(names).lstrip("[").rstrip("]")
         em.add_field(
-          name=f"{display_name} ─ {amount} owned",
+          name=f"{display_name} ─ {amount:,} owned",
           value=f"*ID* {names}",
           inline=False
         )
@@ -1559,7 +1577,7 @@ class Currency(commands.Cog):
     )
     embed.add_field(
       name="Experience",
-      value=exp
+      value="{:,}".format(exp)
     )
     embed.add_field(
       name="Multi",
@@ -1568,7 +1586,7 @@ class Currency(commands.Cog):
     try:
       embed.add_field(
         name='Commands Issued',
-        value=data[str(user.id)]["commands"],
+        value="{:,}".format(data[str(user.id)]["commands"]),
         inline=False
       )
     except:

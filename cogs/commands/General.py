@@ -27,6 +27,7 @@ class General(commands.Cog):
     self.botbanned = bot.botbanned
     self.session = bot.aiohttp_session
     self.servers = {}
+    self.calling = []
     self.intervals = bot.intervals
     self.cmdintervals = {"strikes":{}}
     self.hidden=False
@@ -42,15 +43,18 @@ class General(commands.Cog):
     img.save(f"cogs/commands/{path_name}.png")
     return path_name
 
+  @commands.bot_has_permissions(attach_files=True)
   @commands.command(name="qr", aliases=["qrcode"])
   async def qrcode(self, ctx, arg):
     loop = asyncio.get_running_loop()
     with concurrent.futures.ThreadPoolExecutor() as pool:
       result = await loop.run_in_executor(pool, self.make_qr, arg)
     try:
+      file_=discord.File(f"cogs/commands/{result}.png", filename="qrcode.png")
       embed = discord.Embed(title="Be aware of QRcodes!", description="People can put IP grabbers, cookies loggers or NSFW stuff that would create awkward scenes.")
+      embed.set_image(url="attachment://qrcode.png")
       embed.set_footer(text="to scan the QR code search \"QR code scanner\" on google")
-      await ctx.send(embed=embed, file=discord.File(f"cogs/commands/{result}.png", filename="qrcode.png"))
+      await ctx.send(embed=embed, file=file_)
       Path(f"cogs/commands/{result}.png").unlink()
     except Exception as e:
       raise e
@@ -63,13 +67,16 @@ class General(commands.Cog):
     except Exception as e:
       print(e)
 
+  @commands.bot_has_permissions(attach_files=True)
   @commands.command()
-  async def http_cat(self, ctx, code:int):
+  async def cat(self, ctx, code:int):
     response = await self.session.get(f"https://http.cat/{code}.jpg")
     rb = await response.read()
     bytes_ = io.BytesIO(rb)
     await ctx.send(file=discord.File(fp=bytes_, filename=f"http{code}.jpg"))
 
+
+  @commands.bot_has_permissions(attach_files=True)
   @commands.command()
   async def screenshot(self, ctx, url):
     if not ctx.channel.nsfw:
@@ -88,8 +95,15 @@ class General(commands.Cog):
     try:
       dict1 = await r.json()
       if dict1["output"]["nsfw_score"] > 0.4:
-        await ctx.send("Hey, looks like the NSFW score for this website is going off the charts!")
-        return
+        await ctx.send("Hey, looks like the NSFW score for this website is going off the charts! Do you want to proceed? `y` or `Y`")
+        def check(m):
+          return m.author == ctx.author and m.channel == ctx.channel
+        try:
+          msg = await self.bot.wait_for('message', check=check, timeout=10.0)
+          if not msg.content.lower() == "y":
+            return
+        except asyncio.TimeoutError:
+          return
     except:
       await ctx.send("The NSFW detector website is down, do you want to continue?")
       def check(m):
@@ -97,17 +111,15 @@ class General(commands.Cog):
       try:
         msg = await self.bot.wait_for('message', check=check, timeout=10.0)
         decline_list = ["yes", "oui", "ye", "why not", "y not", "ye!", "y", "y!", "yes!", "yus"]
-        if not any([True if i in message.content.lower() else False for i in decline_list]):
+        if not any([True if i in msg.content.lower() else False for i in decline_list]):
           return
       except asyncio.TimeoutError:
         return
     embed=discord.Embed(
     )
-    link2=f"https://image.thum.io/get/auth/53268-Bot/https://{url}"
-    embed.set_image(url=f"https://image.thum.io/get/http://{url}")
+    embed.set_image(url=f"https://image.thum.io/get/auth/53268-Bot/https://{url}")
     await ctx.send(embed=embed)
 
-    
   @discord.ext.commands.cooldown(1, 1, commands.BucketType.user)
   @commands.command()
   async def ping(self, ctx):
@@ -142,6 +154,7 @@ class General(commands.Cog):
     timestamp = int(dt.timestamp())
     await ctx.send(f"<t:{timestamp}>")
 
+  @commands.bot_has_permissions(embed_links=True)
   @commands.command()
   async def insult(self, ctx, member:discord.Member):
     with open ("cogs/commands/insults.txt", "r") as f:
@@ -189,18 +202,26 @@ class General(commands.Cog):
           content = ""
           for i in options:
             content+=f"{i}"
-          await select_ctx.send(f"Selected options: {content}, right={True if str(content) in right_answers else False}")
+          is_right = True if str(content) in right_answers else False
+          salary = jobs[job]["salary"] if is_right else jobs[job]["fail"]
+          try:
+            number_of_degrees = len(self.maindb[str(ctx.author.id)]["degree"])
+          except:
+            number_of_degrees=0
+          if number_of_degrees > 0:
+            salary=int(salary*(number_of_degrees*0.2+1))
+          await select_ctx.send(f"Selected options: {content}, right={True if str(content) in right_answers else False}, Salary = {salary}")
         except asyncio.TimeoutError:
           await messageMain.edit(content="Choice test timeout", components=[])
     except Exception as e:
       print(e)
-
+  
   @commands.command()
   async def used(self, ctx):
     try:
       embed=discord.Embed(
         title=f"{ctx.author}'s bot usage data'",
-        description="__commands__: {}".format(self.usersdb[str(ctx.author.id)]["commands"])
+        description="__commands__: {:,}".format(self.usersdb[str(ctx.author.id)]["commands"])
       )
       await ctx.send(embed=embed)
     except:
@@ -221,8 +242,12 @@ class General(commands.Cog):
   async def userphone(self, ctx):
     if len(self.servers)==0:
       self.servers[str(ctx.guild.id)]=ctx.channel.id
-      await ctx.send("Waiting for a server to call...")
-      return
+      if not ctx.guild.id in self.calling:
+        await ctx.send("Waiting for a server to call...")
+        return
+      else:
+        await ctx.send("There's already a call inside this server!")
+        return
     else:
       for server in self.servers.keys():
         guild_id = int(server)
@@ -242,6 +267,8 @@ class General(commands.Cog):
         await ctx.send("Their text channel was deleted during the wait process.")
       await channel.send("Connected! say -h to hangup.")
       await ctx.send("Connected! say -h to hangup.")
+      self.calling.append(channel.guild.id)
+      self.calling.append(ctx.guild.id)
     def check(m):
       urls = re.findall('http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*(),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', m.content.lower())
       invites = re.findall("discord(?:\.com|app\.com|\.gg)[\/invite\/]?(?:[a-zA-Z0-9\-]{2,32})", m.content.lower())
@@ -284,6 +311,14 @@ class General(commands.Cog):
         await ctx.send("Disconnected.")
         await channel.send("Disconnected.")
         break
+    try:
+      self.calling.pop(ctx.guild.id)
+    except:
+      pass
+    try:
+      self.calling.pop(channel.guild.id)
+    except:
+      return
 
   @commands.Cog.listener()
   async def on_command_completion(self, ctx):
@@ -440,7 +475,6 @@ class General(commands.Cog):
         except:
           await ctx.message.reply(embed=em)
 
-
   @commands.Cog.listener()
   async def on_message(self, message):
     if message.guild  is None:
@@ -452,7 +486,11 @@ class General(commands.Cog):
       else:
         self.logsdb[str(message.guild.id)]["lm"]=int(message.created_at.timestamp())
       return
-    if "<@!823699570147065876>" in message.content or "<@823699570147065876>" in message.content:
+    if f"<@{self.bot.user.id}>" in message.content or f"<@!{self.bot.user.id}>" in message.content:
+      users = self.botbanned
+      if str(message.author.id) in users.keys():
+        if users[str(message.author.id)]["spam_banned"] or users[str(message.author.id)]["bot_banned"]:
+          return
       prefix = self.logsdb
       try:
         prefix = prefix[str(message.guild.id)]["prefix"]
@@ -1063,6 +1101,7 @@ class General(commands.Cog):
           autho=False
           break
   
+  @commands.bot_has_permissions(manage_webhooks=True)
   @commands.command(aliases=["imp"])
   async def impersonate(self, ctx, user:discord.User, *, words):
     webhooks = await ctx.guild.webhooks()
@@ -1077,10 +1116,15 @@ class General(commands.Cog):
     if webh == None:
       try:
         webh = await ctx.channel.create_webhook(name="NQN")
-      except:
-        await ctx.send("I need `manage_webhook` permissions.")
+      except Exception as e:
+        if isinstance(e, discord.HTTPException):
+          await ctx.send("Well... this is awkward. But the webhook limit reached for this channel!")
+          return
+        print(e)
+        return
     await webh.send(content=words, username=user.name, avatar_url=user.avatar_url, allowed_mentions=discord.AllowedMentions(roles=False, users=False, everyone=False))
 
+  @commands.bot_has_permissions(manage_webhooks=True)
   @commands.command()
   async def nqn(self, ctx, emoji):
     try:

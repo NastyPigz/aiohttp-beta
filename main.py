@@ -1,6 +1,31 @@
 # exit(0)
-import discord, aiohttp
+import discord, aiohttp, sys
 from discord.ext import commands, tasks
+discord.http.Route.BASE = 'https://discord.com/api/v9'
+async def get_gateway(self, *, encoding: str = 'json', zlib: bool = True) -> str:
+    return "wss://gateway.discord.gg?encoding=json&v=9&compress=zlib-stream"
+discord.http.HTTPClient.get_gateway = get_gateway
+class _Overwrites:
+    __slots__ = ('id', 'allow', 'deny', 'type')
+
+    def __init__(self, **kwargs):
+        self.id = kwargs.pop('id')
+        self.allow = int(kwargs.pop('allow_new', 0))
+        self.deny = int(kwargs.pop('deny_new', 0))
+        self.type = sys.intern(str(kwargs.pop('type')))
+
+    def _asdict(self):
+        return {
+            'id': self.id,
+            'allow': str(self.allow),
+            'deny': str(self.deny),
+            'type': self.type,
+        }
+discord.abc._Overwrites = _Overwrites
+from discord.ext.commands.bot import BotBase
+class Bot(BotBase, discord.Client):
+  pass
+commands.Bot = Bot
 import random, asyncio, re, time, datetime, logging, os, json
 from data.profanity import swearwords
 from asyncio.tasks import Task
@@ -22,6 +47,7 @@ from discord_slash.utils import manage_components
 from discord_slash.model import ButtonStyle
 from discord_slash.context import ComponentContext
 import logging
+from discord_slash.utils.manage_components import create_select, create_select_option
 from handler import ch
 
 logger = logging.getLogger('discord')
@@ -90,16 +116,22 @@ class MyContext(commands.Context):
         chb=True
       ):
     try:
+      if self.command.name.lower() == "help":
+        cog_ = "help"
+      elif self.command.name.lower() in ["calc", "test", "reload", "check_help"]:
+        cog_ = "main_file_commands"
+      else:
+        cog_ = self.command.cog.qualified_name.lower()
       if chb:
-        content = await ch(self.prefix, self.author, self.bot, content)
+        content = await ch(self.prefix, self.author, self.bot, content, cog_)
       else:
         pass
-      return await super().send(content=content, embed=embed, file=file, delete_after=delete_after, allowed_mentions=discord.AllowedMentions(roles=False, users=False, everyone=False), components=components)
+      return await super().send(content=content, embed=embed,file=file, files=files, delete_after=delete_after, allowed_mentions=discord.AllowedMentions(roles=False, users=False, everyone=False), components=components)
     # except discord.HTTPException:
     except Exception as e:
       print(e)
       pass
-  
+
   async def reply(self, content=None,
         *,
         tts=None,
@@ -117,10 +149,10 @@ class MyContext(commands.Context):
         chb=True):
     try:
       if chb:
-        content = await ch(self.prefix, self.author, self.bot, content)
+        content = await ch(self.prefix, self.author, self.bot, content, self.command.cog)
       else:
         pass
-      return await super().reply(content=content, embed=embed, file=file, delete_after=delete_after, allowed_mentions=discord.AllowedMentions(roles=False, users=False, everyone=False, replied_user=False), components=components)
+      return await super().reply(content=content, embed=embed, file=file, files=files, delete_after=delete_after, allowed_mentions=discord.AllowedMentions(roles=False, users=False, everyone=False, replied_user=False), components=components)
     # except discord.HTTPException:
     except Exception as e:
       print(e)
@@ -140,11 +172,47 @@ client = MyBot(case_insensitive=True,
 command_prefix=get_pre,
 strip_after_prefix=True,
 intents=intents)
+client.selector = None
+client.smdata = None
+
+@tasks.loop()
+async def selector_help():
+  await client.wait_until_ready()
+  embed = discord.Embed(
+    title="Help", 
+    url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", 
+    description="Here are all the categories.",
+    color=discord.Colour.random()
+    )
+  d = client.cogs
+  for key in d.keys():
+    try:
+      if d[key].hidden:
+        continue
+    except:
+      continue
+    embed.add_field(
+      name=key.capitalize(),
+      value="`{}`".format("<prefix>"+'help '+key.lower()), 
+      inline=True
+    )
+  if not client.selector == None:
+    interaction: ComponentContext = await manage_components.wait_for_component(
+      client,
+      components=client.selector
+    )
+    if "All" in interaction.selected_options:
+      embed=embed
+    else:
+      embed = await CustomHelp.get_cog_help(None, client.get_cog(interaction.selected_options[0]))
+    await interaction.edit_origin(embed=embed)
+
+selector_help.start()
 
 class CustomHelp(commands.HelpCommand):
   def get_command_signature(self, command):
     return '%s%s %s' % (
-      self.clean_prefix, 
+      self.context.clean_prefix, 
       command.qualified_name, 
       command.signature
     )
@@ -158,10 +226,28 @@ class CustomHelp(commands.HelpCommand):
       )
     d = client.cogs
     paginationList = [None]
+    continue_=None
     for key in d.keys():
       try:
-        if d[key].hidden:
-          continue
+        if not self.context.author.id in admins:
+          if d[key].hidden:
+            continue
+        elif continue_:
+          if d[key].hidden:
+            continue
+        elif continue_ == False:
+          pass
+        else:
+          def check(m):
+            return m.author == self.context.author and m.channel == self.context.channel
+          await self.context.send("say r or n")
+          msg = await self.context.bot.wait_for('message', check=check)
+          if not msg.content.lower() == "r":
+            continue_ = True
+            continue
+          else:
+            continue_ = False
+            pass
       except:
         continue
       embed.add_field(
@@ -219,7 +305,16 @@ class CustomHelp(commands.HelpCommand):
             await interaction.defer(edit_origin=True)
             continue
           if interaction.author != self.context.author:
-            await interaction.defer(edit_origin=True)
+            the_num = paginationList[current+1]
+            if the_num is None:
+              embed_edited=embed
+            else:
+              embed_edited = await self.get_cog_help(self.context.bot.get_cog(the_num))
+            await interaction.send(
+              embed = embed_edited,
+              components = [client.selector, action_row],
+              hidden=True
+            )
             continue
           if interaction.custom_id == "back":
               current -= 1
@@ -348,15 +443,25 @@ class CustomHelp(commands.HelpCommand):
       color=discord.Colour.random()
       )
     await self.context.send(embed=embed)
-  
+
+  async def send_group_help(self, group):
+    if not self.context.author.id in admins:
+      return await self.context.message.add_reaction(":think:825452368128376843")
+    content=""
+    for command in group.commands:
+      content+="`{}`, ".format(command.name)
+    await self.context.send(content)
+
   async def send_command_help(self, command):
     if not isinstance(command, commands.core.Command):
       clss = client.get_commands(command)
     else:
       clss = command
-    if ((clss.hidden == True) and (self.context.author.id not in admins)) or ((clss.cog.hidden == True) and (self.context.author.id not in admins)):
+    if not clss.cog == None:
+      if ((clss.hidden == True) and (self.context.author.id not in admins)) or ((clss.cog.hidden == True) and (self.context.author.id not in admins)):
+        return await self.context.message.add_reaction(":think:825452368128376843")
+    else:
       return await self.context.message.add_reaction(":think:825452368128376843")
-      # return await self.context.send('Oop. You have found the ultimate secret staff only command. Whats the password. You have 60 seconds. \n||Hint: Its 2 trillion digits long||')
     embed = discord.Embed(
       title=command,
       color=discord.Colour.random()
@@ -379,9 +484,21 @@ class CustomHelp(commands.HelpCommand):
         value=', '.join(clss.aliases),
         inline=False
       )
-
+    if not clss._buckets._cooldown == None:
+      rate = clss._buckets._cooldown.rate
+      embed.add_field(
+        name='Cooldown:',
+        value="{} seconds every {} {}".format(clss._buckets._cooldown.per, rate, "commands" if rate > 1 else "command"),
+        inline=False
+      )
+    else:
+      embed.add_field(
+        name='Cooldown:',
+        value="None",
+        inline=False
+      )
     embed.add_field(
-      name='description:',
+      name='Description:',
       value=clss.help,
       inline=False
     )
@@ -393,9 +510,9 @@ class CustomHelp(commands.HelpCommand):
 
 help_attr={
    'name': "help",
-   'cooldown': commands.Cooldown(1, 2, commands.BucketType.user)
+  #  'cooldown': commands.cooldown(1, 2, commands.BucketType.user)
   }
-
+commands.cooldown(1, 5)(client.get_command('help'))
 help_cmd = CustomHelp(
   command_attrs=help_attr
 )
@@ -476,8 +593,9 @@ client.aiohttp_session = aiohttp.ClientSession()
 extensions = [
     'cogs.moderator.admin', 'cogs.moderator.mod', 'cogs.commands.General', 'cogs.help.rules', 'cogs.startup.error',
     'cogs.startup.ready', 'cogs.currency.Currency', 'cogs.emoji.emojis',
-    'cogs.commands.Data', "cogs.startup.web", 'other.mongo', 'cogs.growth.growth', 'jishaku', 'cogs.commands.Evaluation',
-    "cogs.debug", "cogs.commands.Computer", "cogs.experimental"
+    'cogs.commands.Data', "cogs.commands.SocialMedia", "cogs.startup.web", 'other.mongo', 'cogs.growth.growth', 'jishaku', 'cogs.commands.Evaluation',
+    "cogs.debug", "cogs.commands.Computer", "cogs.experimental",
+    "cogs.music"
 ]
 
 @client.command()
@@ -490,66 +608,80 @@ async def check_help(ctx):
 
 @client.check
 async def check_cmds(ctx):
-	if not client.is_ready():
-		await ctx.channel.send("I am just starting!")
-		return False
-	if client.loadng:
-		await ctx.channel.send(
-		    "The developers are loading commands, try again later.")
-		return False
-	banned = client.botbanned
-	if ctx.guild == None:
-		dm_channel = True
-	else:
-		dm_channel = False
-	logs = client.logsdb
-	try:
-		cmds = logs[str(ctx.guild.id)]["disabled"]
-		if str(ctx.command) in cmds:
-			await ctx.channel.send("This command is disabled in this server.")
-			return False
-	except:
-		pass
-	try:
-		if banned[str(ctx.author.id)]["bot_banned"] or banned[str(
-		    ctx.author.id)]["spam_banned"] or dm_channel:
-			return False
-		else:
-			return True
-	except:
-		if dm_channel:
-			return False
-		return True
-	# return not ((ctx.author.id in await get_bot_banned()) or (ctx.guild == None) or (ctx.author.id in await get_spam_banned()) or client.loadng or (str(ctx.command) in (await get_log_data()).get(str(ctx.guild.id), {}).get("disabled", [])))
+  if not client.is_ready():
+    await ctx.channel.send("I am just starting!")
+    return False
+  if client.loadng:
+    await ctx.channel.send("The developers are loading commands, try again later.")
+    return False
+  if isinstance(ctx.me, discord.Member):
+    if not ctx.me.guild_permissions.send_messages:
+      return False
+    if not ctx.me.guild_permissions.embed_links:
+      await ctx.channel.send("Heyy so... I'm missing `embed_links` permissions. More than half of the commands in this bot responds in embeds.")
+      return False
+    if not ctx.me.guild_permissions.external_emojis:
+      await ctx.channel.send("I need to have `external_emojis` permissions! Lots of my functions will include emojis.")
+      return False
+    if not ctx.me.guild_permissions.read_message_history:
+      await ctx.channel.send("... I can't read message history in this channel! Please make sure I have `read_message_history` permissions.")
+      return False
+  banned = client.botbanned
+  if ctx.guild == None:
+    dm_channel = True
+  else:
+    dm_channel = False
+  logs = client.logsdb
+  try:
+    cmds = logs[str(ctx.guild.id)]["disabled"]
+    if str(ctx.command) in cmds:
+      await ctx.channel.send("This command is disabled in this server.")
+      return False
+  except:
+    pass
+  try:
+    if banned[str(ctx.author.id)]["bot_banned"] or banned[str(
+        ctx.author.id)]["spam_banned"] or dm_channel:
+      return False
+    else:
+      return True
+  except:
+    if dm_channel:
+      return False
+    return True
+  # return not ((ctx.author.id in await get_bot_banned()) or (ctx.guild == None) or (ctx.author.id in await get_spam_banned()) or client.loadng or (str(ctx.command) in (await get_log_data()).get(str(ctx.guild.id), {}).get("disabled", [])))
 
 @commands.check
 async def check_commands(ctx: SlashContext):
-	if client.loadng:
-		await ctx.send("The developers are loading commands, try again later.")
-		return
-	banned = client.botbanned
-	if ctx.guild == None:
-		dm_channel = True
-	else:
-		dm_channel = False
-	logs = client.logsdb
-	try:
-		cmds = logs[str(ctx.guild.id)]["disabled"]
-		if str(ctx.command) in cmds:
-			await ctx.send("This command is disabled in this server.")
-			return False
-	except:
-		pass
-	try:
-		if banned[str(ctx.author.id)]["bot_banned"] or banned[str(
-		    ctx.author.id)]["spam_banned"] or dm_channel:
-			return False
-		else:
-			return True
-	except:
-		if dm_channel:
-			return False
-		return True
+  if not client.is_ready():
+    await ctx.send("I am just starting!")
+    return False
+  if client.loadng:
+    await ctx.send("The developers are loading commands, try again later.")
+    return
+  banned = client.botbanned
+  if ctx.guild == None:
+    dm_channel = True
+  else:
+    dm_channel = False
+  logs = client.logsdb
+  try:
+    cmds = logs[str(ctx.guild.id)]["disabled"]
+    if str(ctx.command) in cmds:
+      await ctx.send("This command is disabled in this server.")
+      return False
+  except:
+    pass
+  try:
+    if banned[str(ctx.author.id)]["bot_banned"] or banned[str(
+        ctx.author.id)]["spam_banned"] or dm_channel:
+      return False
+    else:
+      return True
+  except:
+    if dm_channel:
+      return False
+    return True
 
 @client.event
 async def on_slash_command(ctx: SlashContext):
@@ -875,11 +1007,3 @@ for extension in extensions:
 	client.load_extension(extension)
 
 client.run(os.getenv("TOKEN"))
-
-# async def main():
-#   lop = asyncio.get_event_loop()
-#   f1 = lop.create_task(run_web())
-#   f2 = lop.create_task(run_client())
-#   await asyncio.wait([f1, f2])
-
-# asyncio.run(main())

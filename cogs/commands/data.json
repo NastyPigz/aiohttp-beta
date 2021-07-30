@@ -1,0 +1,50 @@
+{
+    "763854419484999722": {
+        "password": "123456",
+        "requests": [],
+        "friends": [
+            785247548843360257
+        ],
+        "blocked": [],
+        "settings": {
+            "friend_setting": false
+        },
+        "posts": [
+            "https://cdn.discordapp.com/attachments/856589271757226024/866430909741400134/Ruby.png",
+            "nice",
+            "re"
+        ]
+    },
+    "725081836874760224": {
+        "password": "123456",
+        "requests": [
+            763854419484999722
+        ]
+    },
+    "823933438079795260": {
+        "password": "123456",
+        "requests": [
+            763854419484999722
+        ]
+    },
+    "785247548843360257": {
+        "password": "123456",
+        "friends": [
+            763854419484999722
+        ],
+        "requests": [],
+        "blocked": [],
+        "settings": {
+            "friend_setting": false
+        },
+        "posts": [
+            "hi capitalism i know ur seeing this"
+        ]
+    },
+    "298043305927639041": {
+        "password": "wagwan"
+    },
+    "561130926218674199": {
+        "password": "123456"
+    }
+}

@@ -102,6 +102,8 @@ class Admin(commands.Cog):
   async def reboot(self, ctx):
     if ctx.author.id == 763854419484999722:
       await ctx.send("rebooting the bot...")
+      with open("afk/communicate.txt", "w") as f:
+        f.write("exit")
       os.execv(sys.executable, ['python'] + sys.argv)
     else:
       await ctx.send("You cannot reboot the bot.")
