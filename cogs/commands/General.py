@@ -43,7 +43,7 @@ class General(commands.Cog):
     img.save(f"cogs/commands/{path_name}.png")
     return path_name
 
-  @commands.bot_has_permissions(attach_files=True)
+  # @commands.bot_has_permissions(attach_files=True)
   @commands.command(name="qr", aliases=["qrcode"])
   async def qrcode(self, ctx, arg):
     loop = asyncio.get_running_loop()
@@ -67,7 +67,7 @@ class General(commands.Cog):
     except Exception as e:
       print(e)
 
-  @commands.bot_has_permissions(attach_files=True)
+  # @commands.bot_has_permissions(attach_files=True)
   @commands.command()
   async def cat(self, ctx, code:int):
     response = await self.session.get(f"https://http.cat/{code}.jpg")
@@ -76,7 +76,7 @@ class General(commands.Cog):
     await ctx.send(file=discord.File(fp=bytes_, filename=f"http{code}.jpg"))
 
 
-  @commands.bot_has_permissions(attach_files=True)
+  # @commands.bot_has_permissions(attach_files=True)
   @commands.command()
   async def screenshot(self, ctx, url):
     if not ctx.channel.nsfw:
@@ -154,7 +154,7 @@ class General(commands.Cog):
     timestamp = int(dt.timestamp())
     await ctx.send(f"<t:{timestamp}>")
 
-  @commands.bot_has_permissions(embed_links=True)
+  # @commands.bot_has_permissions(embed_links=True)
   @commands.command()
   async def insult(self, ctx, member:discord.Member):
     with open ("cogs/commands/insults.txt", "r") as f:
@@ -477,7 +477,11 @@ class General(commands.Cog):
 
   @commands.Cog.listener()
   async def on_message(self, message):
-    if message.guild  is None:
+    try:
+      channel = await self.bot.fetch_channel(message.channel.id)
+      if isinstance(channel, discord.channel.DMChannel):
+        return
+    except:
       return
     if message.author == self.bot.user:
       if not str(message.guild.id) in self.logsdb.keys():
@@ -1101,7 +1105,7 @@ class General(commands.Cog):
           autho=False
           break
   
-  @commands.bot_has_permissions(manage_webhooks=True)
+  # @commands.bot_has_permissions(manage_webhooks=True)
   @commands.command(aliases=["imp"])
   async def impersonate(self, ctx, user:discord.User, *, words):
     webhooks = await ctx.guild.webhooks()
@@ -1124,7 +1128,7 @@ class General(commands.Cog):
         return
     await webh.send(content=words, username=user.name, avatar_url=user.avatar_url, allowed_mentions=discord.AllowedMentions(roles=False, users=False, everyone=False))
 
-  @commands.bot_has_permissions(manage_webhooks=True)
+  # @commands.bot_has_permissions(manage_webhooks=True)
   @commands.command()
   async def nqn(self, ctx, emoji):
     try:

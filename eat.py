@@ -1,20 +1,20 @@
-import aiohttp
-session = aiohttp.ClientSession()
-ws = await session.ws_connect(
-    'http://webscoket-server.org/endpoint')
+# import aiohttp
+# session = aiohttp.ClientSession()
+# ws = await session.ws_connect(
+#     'http://webscoket-server.org/endpoint')
 
-while True:
-  msg = await ws.receive()
-  if msg.tp == aiohttp.MsgType.text:
-      if msg.data == 'close':
-          await ws.close()
-          break
-      else:
-          ws.send_str(msg.data + '/answer')
-  elif msg.tp == aiohttp.MsgType.closed:
-      break
-  elif msg.tp == aiohttp.MsgType.error:
-      break
+# while True:
+#   msg = await ws.receive()
+#   if msg.tp == aiohttp.MsgType.text:
+#       if msg.data == 'close':
+#           await ws.close()
+#           break
+#       else:
+#           ws.send_str(msg.data + '/answer')
+#   elif msg.tp == aiohttp.MsgType.closed:
+#       break
+#   elif msg.tp == aiohttp.MsgType.error:
+#       break
 
 # import websocket
 # import json

@@ -21,6 +21,7 @@ class ErrorHandler(commands.Cog):
 
   @commands.Cog.listener()
   async def on_command_error(self, ctx, error):
+    print(error)
     try:
       if str(ctx.command) == "bot_unban":
         result = await Admin.unban(self,ctx, ctx.author.id)

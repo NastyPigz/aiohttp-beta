@@ -1,31 +1,5 @@
-# exit(0)
 import discord, aiohttp, sys
 from discord.ext import commands, tasks
-discord.http.Route.BASE = 'https://discord.com/api/v9'
-async def get_gateway(self, *, encoding: str = 'json', zlib: bool = True) -> str:
-    return "wss://gateway.discord.gg?encoding=json&v=9&compress=zlib-stream"
-discord.http.HTTPClient.get_gateway = get_gateway
-class _Overwrites:
-    __slots__ = ('id', 'allow', 'deny', 'type')
-
-    def __init__(self, **kwargs):
-        self.id = kwargs.pop('id')
-        self.allow = int(kwargs.pop('allow_new', 0))
-        self.deny = int(kwargs.pop('deny_new', 0))
-        self.type = sys.intern(str(kwargs.pop('type')))
-
-    def _asdict(self):
-        return {
-            'id': self.id,
-            'allow': str(self.allow),
-            'deny': str(self.deny),
-            'type': self.type,
-        }
-discord.abc._Overwrites = _Overwrites
-from discord.ext.commands.bot import BotBase
-class Bot(BotBase, discord.Client):
-  pass
-commands.Bot = Bot
 import random, asyncio, re, time, datetime, logging, os, json
 from data.profanity import swearwords
 from asyncio.tasks import Task
@@ -84,14 +58,13 @@ async def get_pre(bot, message):
     return [
 		    'CAP', 'cap', 'cAp', "caP", "Cap", "CAp", "CaP", "cAP", "c/", "C/"
 		]
-  fallback = os.urandom(32).hex()
   prefixes = prefix
   try:
     comp = re.compile("^(" + "|".join(map(re.escape, prefixes)) + ").*", flags=re.I)
     match = comp.match(message.content)
     if match is not None:
       return match.group(1)
-    return fallback
+    return "V8Y31VG0831YR8732NCH9GM3875GT813G5TCM8931YGNC985T31YGCM95T8713MGCT98G5G7139C8M31GT9587CGT4C1987G5T89MC71GM98T5GC753198MTGC89CG17M9873GC3T198C7G31587TCG38197GTC9N87G5198T31875CGT8137G5MT87CG15387CGT0M31GC08T5137G0T8C73G108TC7G530MC8TG73C08M1CGTV8Y31VG0831YR8732NCH9GM3875GT813G5TCM8931YGNC985T31YGCM95T8713MGCT98G5G7139C8M31GT9587CGT4C1987G5T89MC71GM98T5GC753198MTGC89CG17M9873GC3T198C7G31587TCG38197GTC9N87G5198T31875CGT8137G5MT87CG15387CGT0M31GC08T5137G0T8C73G108TC7G530MC8TG73C08M1CGTV8Y31VG0831YR8732NCH9GM3875GT813G5TCM8931YGNC985T31YGCM95T8713MGCT98G5G7139C8M31GT9587CGT4C1987G5T89MC71GM98T5GC753198MTGC89CG17M9873GC3T198C7G31587TCG38197GTC9N87G5198T31875CGT8137G5MT87CG15387CGT0M31GC08T5137G0T8C73G108TC7G530MC8TG73C08M1CGTV8Y31VG0831YR8732NCH9GM3875GT813G5TCM8931YGNC985T31YGCM95T8713MGCT98G5G7139C8M31GT9587CGT4C1987G5T89MC71GM98T5GC753198MTGC89CG17M9873GC3T198C7G31587TCG38197GTC9N87G5198T31875CGT8137G5MT87CG15387CGT0M31GC08T5137G0T8C73G108TC7G530MC8TG73C08M1CGTV8Y31VG0831YR8732NCH9GM3875GT813G5TCM8931YGNC985T31YGCM95T8713MGCT98G5G7139C8M31GT9587CGT4C1987G5T89MC71GM98T5GC753198MTGC89CG17M9873GC3T198C7G31587TCG38197GTC9N87G5198T31875CGT8137G5MT87CG15387CGT0M31GC08T5137G0T8C73G108TC7G530MC8TG73C08M1CGTV8Y31VG0831YR8732NCH9GM3875GT813G5TCM8931YGNC985T31YGCM95T8713MGCT98G5G7139C8M31GT9587CGT4C1987G5T89MC71GM98T5GC753198MTGC89CG17M9873GC3T198C7G31587TCG38197GTC9N87G5198T31875CGT8137G5MT87CG15387CGT0M31GC08T5137G0T8C73G108TC7G530MC8TG73C08M1CGTV8Y31VG0831YR8732NCH9GM3875GT813G5TCM8931YGNC985T31YGCM95T8713MGCT98G5G7139C8M31GT9587CGT4C1987G5T89MC71GM98T5GC753198MTGC89CG17M9873GC3T198C7G31587TCG38197GTC9N87G5198T31875CGT8137G5MT87CG15387CGT0M31GC08T5137G0T8C73G108TC7G530MC8TG73C08M1CGTV8Y31VG0831YR8732NCH9GM3875GT813G5TCM8931YGNC985T31YGCM95T8713MGCT98G5G7139C8M31GT9587CGT4C1987G5T89MC71GM98T5GC753198MTGC89CG17M9873GC3T198C7G31587TCG38197GTC9N87G5198T31875CGT8137G5MT87CG15387CGT0M31GC08T5137G0T8C73G108TC7G530MC8TG73C08M1CGTV8Y31VG0831YR8732NCH9GM3875GT813G5TCM8931YGNC985T31YGCM95T8713MGCT98G5G7139C8M31GT9587CGT4C1987G5T89MC71GM98T5GC753198MTGC89CG17M9873GC3T198C7G31587TCG38197GTC9N87G5198T31875CGT8137G5MT87CG15387CGT0M31GC08T5137G0T8C73G108TC7G530MC8TG73C08M1CGTV8Y31VG0831YR8732NCH9GM3875GT813G5TCM8931YGNC985T31YGCM95T8713MGCT98G5G7139C8M31GT9587CGT4C1987G5T89MC71GM98T5GC753198MTGC89CG17M9873GC3T198C7G31587TCG38197GTC9N87G5198T31875CGT8137G5MT87CG15387CGT0M31GC08T5137G0T8C73G108TC7G530MC8TG73C08M1CGTV8Y31VG0831YR8732NCH9GM3875GT813G5TCM8931YGNC985T31YGCM95T8713MGCT98G5G7139C8M31GT9587CGT4C1987G5T89MC71GM98T5GC753198MTGC89CG17M9873GC3T198C7G31587TCG38197GTC9N87G5198T31875CGT8137G5MT87CG15387CGT0M31GC08T5137G0T8C73G108TC7G530MC8TG73C08M1CGTV8Y31VG0831YR8732NCH9GM3875GT813G5TCM8931YGNC985T31YGCM95T8713MGCT98G5G7139C8M31GT9587CGT4C1987G5T89MC71GM98T5GC753198MTGC89CG17M9873GC3T198C7G31587TCG38197GTC9N87G5198T31875CGT8137G5MT87CG15387CGT0M31GC08T5137G0T8C73G108TC7G530MC8TG73C08M1CGTV8Y31VG0831YR8732NCH9GM3875GT813G5TCM8931YGNC985T31YGCM95T8713MGCT98G5G7139C8M31GT9587CGT4C1987G5T89MC71GM98T5GC753198MTGC89CG17M9873GC3T198C7G31587TCG38197GTC9N87G5198T31875CGT8137G5MT87CG15387CGT0M31GC08T5137G0T8C73G108TC7G530MC8TG73C08M1CGTV8Y31VG0831YR8732NCH9GM3875GT813G5TCM8931YGNC985T31YGCM95T8713MGCT98G5G7139C8M31GT9587CGT4C1987G5T89MC71GM98T5GC753198MTGC89CG17M9873GC3T198C7G31587TCG38197GTC9N87G5198T31875CGT8137G5MT87CG15387CGT0M31GC08T5137G0T8C73G108TC7G530MC8TG73C08M1CGTV8Y31VG0831YR8732NCH9GM3875GT813G5TCM8931YGNC985T31YGCM95T8713MGCT98G5G7139C8M31GT9587CGT4C1987G5T89MC71GM98T5GC753198MTGC89CG17M9873GC3T198C7G31587TCG38197GTC9N87G5198T31875CGT8137G5MT87CG15387CGT0M31GC08T5137G0T8C73G108TC7G530MC8TG73C08M1CGTV8Y31VG0831YR8732NCH9GM3875GT813G5TCM8931YGNC985T31YGCM95T8713MGCT98G5G7139C8M31GT9587CGT4C1987G5T89MC71GM98T5GC753198MTGC89CG17M9873GC3T198C7G31587TCG38197GTC9N87G5198T31875CGT8137G5MT87CG15387CGT0M31GC08T5137G0T8C73G108TC7G530MC8TG73C08M1CGTV8Y31VG0831YR8732NCH9GM3875GT813G5TCM8931YGNC985T31YGCM95T8713MGCT98G5G7139C8M31GT9587CGT4C1987G5T89MC71GM98T5GC753198MTGC89CG17M9873GC3T198C7G31587TCG38197GTC9N87G5198T31875CGT8137G5MT87CG15387CGT0M31GC08T5137G0T8C73G108TC7G530MC8TG73C08M1CGTV8Y31VG0831YR8732NCH9GM3875GT813G5TCM8931YGNC985T31YGCM95T8713MGCT98G5G7139C8M31GT9587CGT4C1987G5T89MC71GM98T5GC753198MTGC89CG17M9873GC3T198C7G31587TCG38197GTC9N87G5198T31875CGT8137G5MT87CG15387CGT0M31GC08T5137G0T8C73G108TC7G530MC8TG73C08M1CGT"
   except:
     return ""
 
@@ -130,7 +103,6 @@ class MyContext(commands.Context):
     # except discord.HTTPException:
     except Exception as e:
       print(e)
-      pass
 
   async def reply(self, content=None,
         *,
@@ -503,7 +475,7 @@ class CustomHelp(commands.HelpCommand):
       inline=False
     )
 
-    embed.set_footer(text="\"< >\" stands for a required argument and \"[ ]\" stands for a optional argument")
+    embed.set_footer(text="\"<>\" => required | \"[]\" => optional")
 
     await self.context.send(embed=embed)
            
@@ -519,6 +491,7 @@ help_cmd = CustomHelp(
 
 client._BotBase__cogs = commands.core._CaseInsensitiveDict()
 client.help_command=help_cmd
+# client.help_command=None
 client.uptime=None
 
 client.loadng = False
@@ -555,10 +528,6 @@ def convert_mongo():
     client.usersdb[user]={k:v for k, v in users[user].values()}
     client.usersdb[user]["_id"]=user
 
-
-with open("data/json/data.json", "r") as f:
-	dat = json.load(f)
-client.data = dat
 client.intervals = {}
 db = cluster["CapBot"]
 collection = db["main"]
@@ -601,7 +570,7 @@ extensions = [
 @client.command()
 async def check_help(ctx):
 	content = ""
-	async for command in client.commands:
+	for command in client.commands:
 		if str(command.name) not in help_menu.keys():
 			content += f"{command.name} "
 	await ctx.send(content=content)
@@ -609,33 +578,37 @@ async def check_help(ctx):
 @client.check
 async def check_cmds(ctx):
   if not client.is_ready():
-    await ctx.channel.send("I am just starting!")
+    await ctx.send("I am just starting!")
     return False
   if client.loadng:
-    await ctx.channel.send("The developers are loading commands, try again later.")
+    await ctx.send("The developers are loading commands, try again later.")
     return False
-  if isinstance(ctx.me, discord.Member):
-    if not ctx.me.guild_permissions.send_messages:
-      return False
-    if not ctx.me.guild_permissions.embed_links:
-      await ctx.channel.send("Heyy so... I'm missing `embed_links` permissions. More than half of the commands in this bot responds in embeds.")
-      return False
-    if not ctx.me.guild_permissions.external_emojis:
-      await ctx.channel.send("I need to have `external_emojis` permissions! Lots of my functions will include emojis.")
-      return False
-    if not ctx.me.guild_permissions.read_message_history:
-      await ctx.channel.send("... I can't read message history in this channel! Please make sure I have `read_message_history` permissions.")
-      return False
+  # if isinstance(ctx.me, discord.Member):
+  #   if not ctx.me.guild_permissions.send_messages:
+  #     return False
+  #   if not ctx.me.guild_permissions.embed_links:
+  #     await ctx.channel.send("Heyy so... I'm missing `embed_links` permissions. More than half of the commands in this bot responds in embeds.")
+  #     return False
+  #   if not ctx.me.guild_permissions.external_emojis:
+  #     await ctx.channel.send("I need to have `external_emojis` permissions! Lots of my functions will include emojis.")
+  #     return False
+  #   if not ctx.me.guild_permissions.read_message_history:
+  #     await ctx.channel.send("... I can't read message history in this channel! Please make sure I have `read_message_history` permissions.")
+  #     return False
   banned = client.botbanned
-  if ctx.guild == None:
-    dm_channel = True
-  else:
-    dm_channel = False
+  try:
+    channel = await client.fetch_channel(ctx.channel.id)
+    if isinstance(channel, discord.channel.DMChannel):
+      return False
+    else:
+      dm_channel=False
+  except:
+    dm_channel=False
   logs = client.logsdb
   try:
     cmds = logs[str(ctx.guild.id)]["disabled"]
     if str(ctx.command) in cmds:
-      await ctx.channel.send("This command is disabled in this server.")
+      await ctx.send("This command is disabled in this server.")
       return False
   except:
     pass

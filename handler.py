@@ -43,7 +43,7 @@ def is_category(name, desired:str):
 
 class CapitalismConverter(commands.Converter):
   async def convert(self, ctx, argument:str):
-    arg=argument.replace(",", "")
+    arg=argument.replace(",", "").replace(" ", "")
     try:
       arg = float(arg)
       arg = int(arg)
