@@ -32,7 +32,7 @@ class SocialMedia(commands.Cog):
         loop.create_task(self.launch_alt(msg))
       else:
         if msg.author.id == 763854419484999722:
-          # await msg.channel.send("rebooting the bot...")
+          await msg.author.send("rebooting the bot...")
           os.execv(sys.executable, ['python'] + sys.argv)
         else:
           pass
@@ -87,7 +87,7 @@ class SocialMedia(commands.Cog):
           return m.author == ctx.author and m.guild == None and len(m.content) == 6
         try:
           msg = await self.bot.wait_for('message', timeout=60.0, check=check)
-          await msg.channel.send("You are now registered for CAPcord!")
+          await msg.author.send("You are now registered for CAPcord!")
           self.data[str(ctx.author.id)]={}
           self.data[str(ctx.author.id)]["password"]=msg.content
           self.Json(self.data)
@@ -104,19 +104,19 @@ class SocialMedia(commands.Cog):
         msg = await self.bot.wait_for('message', timeout=300.0, check=check)
         if msg.content.lower() == "add":
           try:
-            await msg.channel.send("Ok, please give me their USER ID.")
+            await msg.author.send("Ok, please give me their USER ID.")
             msg = await self.bot.wait_for('message', timeout=10.0, check=check)
             try:
               user_id = int(msg.content)
               if user_id == ctx.author.id:
-                await msg.channel.send("hahaha... you can't be friends with yourself")
+                await msg.author.send("hahaha... you can't be friends with yourself")
                 continue
               user = self.bot.get_user(user_id)
               if user == None:
                 raise Exception
               else:
                 if str(user.id) not in self.data.keys():
-                  await msg.channel.send("They aren't using CAPcord, sad.")
+                  await msg.author.send("They aren't using CAPcord, sad.")
                 else:
                   try:
                     if user.id in self.data[str(ctx.author.id)]["requests"]:
@@ -127,7 +127,7 @@ class SocialMedia(commands.Cog):
                         pass
                       try:
                         if ctx.author.id in self.data[str(user.id)]["blocked"]:
-                          await msg.channel.send("Sorry, the user blocked you.")
+                          await msg.author.send("Sorry, the user blocked you.")
                           self.Json(self.data)
                           continue
                       except:
@@ -141,35 +141,35 @@ class SocialMedia(commands.Cog):
                       except:
                         self.data[str(user.id)]["friends"]=[ctx.author.id]
                       self.Json(self.data)
-                      await msg.channel.send("You have accepted their friend request!")
+                      await msg.author.send("You have accepted their friend request!")
                       continue
                   except:
                     pass
                   try:
                     if user.id in self.data[str(ctx.author.id)]["friends"]:
-                      await msg.channel.send("Okay, I get it. Your guys are friends. But stop trying to add them again!")
+                      await msg.author.send("Okay, I get it. Your guys are friends. But stop trying to add them again!")
                       continue
                   except:
                     pass
                   try:
                     if user.id in self.data[str(ctx.author.id)]["requests"]:
-                      await msg.channel.send("You already sent them a request! Tell them to accept it smh.")
+                      await msg.author.send("You already sent them a request! Tell them to accept it smh.")
                       continue
                   except:
                     pass
                   try:
                     if ctx.author.id in self.data[str(user.id)]["blocked"]:
-                      await msg.channel.send("Sorry, the user blocked you.")
+                      await msg.author.send("Sorry, the user blocked you.")
                       continue
                     if user.id in self.data[str(ctx.author.id)]["blocked"]:
-                      await msg.channel.send("You blocked them... ")
+                      await msg.author.send("You blocked them... ")
                       continue
                   except:
                     pass
                   try:
                     setting = self.data[str(user.id)]["settings"]["friend_setting"]
                     if not setting:
-                      await msg.channel.send("Oop, they have friend request settings off. Must have been a famous guy!")
+                      await msg.author.send("Oop, they have friend request settings off. Must have been a famous guy!")
                       continue
                   except:
                     pass
@@ -179,14 +179,14 @@ class SocialMedia(commands.Cog):
                   except:
                     self.data[str(user.id)]["requests"]=[ctx.author.id]
                     self.Json(self.data)
-                  await msg.channel.send("Alright, sent them a request!")
+                  await msg.author.send("Alright, sent them a request!")
             except:
-              await msg.channel.send("Uhh, I can't find them.")
+              await msg.author.send("Uhh, I can't find them.")
           except asyncio.TimeoutError:
-            await msg.channel.send("Alright, no one was added.")
+            await msg.author.send("Alright, no one was added.")
         elif msg.content.lower() == "remove":
           try:
-            await msg.channel.send("Ok, please give me their USER ID.")
+            await msg.author.send("Ok, please give me their USER ID.")
             msg = await self.bot.wait_for('message', timeout=10.0, check=check)
             try:
               user_id = int(msg.content)
@@ -195,7 +195,7 @@ class SocialMedia(commands.Cog):
                 raise Exception
               else:
                 if str(user.id) not in self.data.keys():
-                  await msg.channel.send("They aren't using CAPcord, sad.")
+                  await msg.author.send("They aren't using CAPcord, sad.")
                 else:
                   try:
                     if user.id in self.data[str(ctx.author.id)]["friends"]:
@@ -203,20 +203,20 @@ class SocialMedia(commands.Cog):
                         self.data[str(ctx.author.id)]["friends"].pop(self.data[str(ctx.author.id)]["friends"].index(user.id))
                         self.data[str(user.id)]["friends"].pop(self.data[str(user.id)]["friends"].index(ctx.author.id))
                         self.Json(self.data)
-                        await msg.channel.send(f"Successfully removed {user} from your friend list.")
+                        await msg.author.send(f"Successfully removed {user} from your friend list.")
                       except:
-                        await msg.channel.send("Hmm, something went wrong. If this happens again, ask this issue in the support server")
+                        await msg.author.send("Hmm, something went wrong. If this happens again, ask this issue in the support server")
                     else:
-                      await msg.channel.send("You guys aren't friends, sadly.")
+                      await msg.author.send("You guys aren't friends, sadly.")
                   except:
-                    await msg.channel.send("You don't have any friends, sad.")
+                    await msg.author.send("You don't have any friends, sad.")
             except:
-              await msg.channel.send("That's not a valid input.")
+              await msg.author.send("That's not a valid input.")
           except asyncio.TimeoutError:
             await ctx.send("Alright, no friends was removed.")
         elif msg.content.lower() == "close":
           self.launched.pop(self.launched.index(ctx.author.id))
-          await msg.channel.send("Thank you for using CAPcord. Goodbye!")
+          await msg.author.send("Thank you for using CAPcord. Goodbye!")
           break
         elif msg.content.lower() == "toggle":
           try:
@@ -227,7 +227,7 @@ class SocialMedia(commands.Cog):
             self.data[str(ctx.author.id)]["settings"]["friend_setting"]=False
             settings = self.data[str(ctx.author.id)]["settings"]["friend_setting"]
           self.Json(self.data)
-          await msg.channel.send(f"Turned friends requests ALLOWED to {settings}")
+          await msg.author.send(f"Turned friends requests ALLOWED to {settings}")
         elif msg.content.lower() == 'menu':
           try:
             friends = self.data[str(ctx.author.id)]["friends"]
@@ -249,11 +249,11 @@ class SocialMedia(commands.Cog):
               content+=f"\n\n**NEW FRIEND REQUESTS**\n{string_requests}\nTo accept a friend request run `add`, then their USER ID"
           except:
             pass
-          await msg.channel.send(content)
+          await msg.author.send(content)
         elif msg.content.lower() == 'posts':
           try:
             try:
-              await msg.channel.send("Who's posts would you like to view? Please send their USER ID. (If you don't respond, I'll send your own posts)")
+              await msg.author.send("Who's posts would you like to view? Please send their USER ID. (If you don't respond, I'll send your own posts)")
               msg = await self.bot.wait_for('message', timeout=10.0, check=check)
               try:
                 user_id = int(msg.content)
@@ -292,7 +292,7 @@ class SocialMedia(commands.Cog):
                     )
                     continue
                   if not user.id in self.data[str(msg.author.id)]["friends"]:
-                    await msg.channel.send("That guy isn't your friend.")
+                    await msg.author.send("That guy isn't your friend.")
                     continue
                   try:
                     posts = self.data[str(user.id)]["posts"]
@@ -324,12 +324,12 @@ class SocialMedia(commands.Cog):
                       }
                     )
                   except:
-                    await msg.channel.send("Hmm, they don't have any posts.")
+                    await msg.author.send("Hmm, they don't have any posts.")
                 except Exception as e:
                   print(e)
-                  await msg.channel.send("You don't have any friends, sad.")
+                  await msg.author.send("You don't have any friends, sad.")
               except:
-                await msg.channel.send("Uhh, I cannot find that user.")
+                await msg.author.send("Uhh, I cannot find that user.")
             except asyncio.TimeoutError:
               try:
                 posts = self.data[str(msg.author.id)]["posts"]
@@ -362,9 +362,9 @@ class SocialMedia(commands.Cog):
                 )
               except Exception as e:
                 print(e)
-                await msg.channel.send("Hmm, you don't have any posts.")
+                await msg.author.send("Hmm, you don't have any posts.")
           except:
-            await msg.channel.send("No posts were found.")
+            await msg.author.send("No posts were found.")
         elif 'post' in msg.content.lower():
           try:
             url = msg.attachments[0].url
@@ -374,7 +374,7 @@ class SocialMedia(commands.Cog):
               self.data[str(ctx.author.id)]["posts"].append(url)
             except:
               self.data[str(ctx.author.id)]["posts"]=[url]
-            await msg.channel.send("Posted.")
+            await msg.author.send("Posted.")
           except:
             content = msg.content.lower().lstrip("post ")
             try:
@@ -383,15 +383,15 @@ class SocialMedia(commands.Cog):
               if not content in self.data[str(ctx.author.id)]["posts"]:
                 self.data[str(ctx.author.id)]["posts"].append(content)
               else:
-                await msg.channel.send("You cannot make the same post twice.")
+                await msg.author.send("You cannot make the same post twice.")
                 continue
             except:
               self.data[str(ctx.author.id)]["posts"]=[content]
-            await msg.channel.send("Posted.")
+            await msg.author.send("Posted.")
           self.Json(self.data)
         elif msg.content.lower() == 'unblock':
           try:
-            await msg.channel.send("Ok, please give me their USER ID.")
+            await msg.author.send("Ok, please give me their USER ID.")
             msg = await self.bot.wait_for('message', timeout=10.0, check=check)
             try:
               user_id = int(msg.content)
@@ -400,44 +400,44 @@ class SocialMedia(commands.Cog):
                 raise Exception
               else:
                 if str(user.id) not in self.data.keys():
-                  await msg.channel.send("They aren't using CAPcord, sad.")
+                  await msg.author.send("They aren't using CAPcord, sad.")
                 else:
                   try:
                     if user.id in self.data[str(ctx.author.id)]["blocked"]:
                       try:
                         self.data[str(ctx.author.id)]["blocked"].pop(self.data[str(ctx.author.id)]["blocked"].index(user.id))
                         self.Json(self.data)
-                        await msg.channel.send(f"Successfully unblocked {user} .")
+                        await msg.author.send(f"Successfully unblocked {user} .")
                       except Exception as e:
                         print(e)
-                        await msg.channel.send("Hmm, something went wrong. If this happens again, ask this issue in the support server")
+                        await msg.author.send("Hmm, something went wrong. If this happens again, ask this issue in the support server")
                     else:
-                      await msg.channel.send("You never blocked that poor guy.")
+                      await msg.author.send("You never blocked that poor guy.")
                   except:
-                    await msg.channel.send("You don't have any blocked users.")
+                    await msg.author.send("You don't have any blocked users.")
             except:
-              await msg.channel.send("That's not a valid input.")
+              await msg.author.send("That's not a valid input.")
           except asyncio.TimeoutError:
             await ctx.send("Alright, no friends was removed.")
         elif msg.content.lower() == 'block':
           try:
-            await msg.channel.send("Ok, please give me their USER ID.")
+            await msg.author.send("Ok, please give me their USER ID.")
             msg = await self.bot.wait_for('message', timeout=10.0, check=check)
             try:
               user_id = int(msg.content)
               if user_id == ctx.author.id:
-                await msg.channel.send("hahaha... you can't block yourself")
+                await msg.author.send("hahaha... you can't block yourself")
                 continue
               user = self.bot.get_user(user_id)
               if user == None:
                 raise Exception
               else:
                 if str(user.id) not in self.data.keys():
-                  await msg.channel.send("They aren't using CAPcord, sad.")
+                  await msg.author.send("They aren't using CAPcord, sad.")
                 else:
                   try:
                     if user.id in self.data[str(ctx.author.id)]["blocked"]:
-                      await msg.channel.send("How many times do u want to block them?!?! They're already blocked.")
+                      await msg.authorl.send("How many times do u want to block them?!?! They're already blocked.")
                       continue
                   except:
                     pass
@@ -467,13 +467,13 @@ class SocialMedia(commands.Cog):
                   except:
                     self.data[str(ctx.author.id)]["blocked"]=[user.id]
                     self.Json(self.data)
-                  await msg.channel.send("They're now BLOCKED.")
+                  await msg.author.send("They're now BLOCKED.")
             except:
-              await msg.channel.send("Uhh, I can't seemed to find that user.")
+              await msg.author.send("Uhh, I can't seemed to find that user.")
           except asyncio.TimeoutError:
-            await msg.channel.send("Alright, no one was added.")
+            await msg.author.send("Alright, no one was added.")
         elif msg.content.lower() == 'send':
-          await msg.channel.send("Please tell me which friend you would like to call (give USER ID )")
+          await msg.author.send("Please tell me which friend you would like to call (give USER ID )")
           try:
             msg = await self.bot.wait_for('message', timeout=10.0, check=check)
             try:
@@ -483,80 +483,80 @@ class SocialMedia(commands.Cog):
                 raise Exception
               else:
                 if str(user.id) not in self.data.keys():
-                  await msg.channel.send("They aren't using CAPcord, sad.")
+                  await msg.author.send("They aren't using CAPcord, sad.")
                 else:
                   try:
                     if user.id in self.data[str(ctx.author.id)]["friends"]:
                       try:
                         await user.send(f"Call from {msg.author} ID => {msg.author.id}\nSay `accept`, `a` or `yes` to accept.")
-                        await msg.channel.send("Dialing...")
+                        await msg.author.send("Dialing...")
                         try:
                           def check2(m):
                             return m.guild == None and m.author == user
                           msg2 = await self.bot.wait_for('message', timeout=60.0, check=check2)
                           if msg2.content.lower() in ["accept", "a", "yes"]:
-                            await msg.channel.send("Connected! say `hang` to hang up.")
-                            await msg2.channel.send("Connected! say `hang` to hang up.")
+                            await msg.author.send("Connected! say `hang` to hang up.")
+                            await msg2.author.send("Connected! say `hang` to hang up.")
                             while True:
                               def check3(m):
                                 return (m.author == msg.author or m.author == msg2.author) and m.guild==None
                               try:
                                 msg3 = await self.bot.wait_for('message', timeout=30.0, check=check3)
                                 if msg3.content.lower() == "hang":
-                                  await msg.channel.send("Call hanged up.")
-                                  await msg2.channel.send("Call hanged up.")
+                                  await msg.author.send("Call hanged up.")
+                                  await msg2.author.send("Call hanged up.")
                                   break
                                 if msg3.author == msg.author:
-                                  await msg2.channel.send("**{}**: {}".format(msg3.author, msg3.content))
+                                  await msg2.author.send("**{}**: {}".format(msg3.author, msg3.content))
                                 else:
-                                  await msg.channel.send("**{}**: {}".format(msg3.author, msg3.content))
+                                  await msg.author.send("**{}**: {}".format(msg3.author, msg3.content))
                               except asyncio.TimeoutError:
-                                await msg.channel.send("Call disconnected.")
-                                await msg2.channel.send("Call disconnected.")
+                                await msg.author.send("Call disconnected.")
+                                await msg2.author.send("Call disconnected.")
                                 break
                           else:
-                            await msg2.channel.send("Call declined.")
-                            await msg.channel.send("Your call was declined.")
+                            await msg2.author.send("Call declined.")
+                            await msg.author.send("Your call was declined.")
                         except asyncio.TimeoutError:
-                          await msg.channel.send("Call ended.")
+                          await msg.author.send("Call ended.")
                       except:
                         try:
-                          await msg.channel.send("Hmm, seems like either of you blocked me or closed DMs.")
+                          await msg.author.send("Hmm, seems like either of you blocked me or closed DMs.")
                         except:
                           pass
                     else:
-                      await msg.channel.send("You guys aren't friends, sadly.")
+                      await msg.author.send("You guys aren't friends, sadly.")
                   except:
-                    await msg.channel.send("You don't have any friends, sad.")
+                    await msg.author.send("You don't have any friends, sad.")
             except:
-              await msg.channel.send("That's not a valid input.")
+              await msg.author.send("That's not a valid input.")
           except asyncio.TimeoutError:
-            await msg.channel.send("Alright, no new calls were started.")
+            await msg.author.send("Alright, no new calls were started.")
         else:
           print(msg.content)
       except asyncio.TimeoutError:
         self.launched.pop(self.launched.index(ctx.author.id))
-        await msg.channel.send("Thank you for using CAPcord. Goodbye!\n\n**TIMEOUT**")
+        await ctx.author.send("Thank you for using CAPcord. Goodbye!\n\n**TIMEOUT**")
         break
     return
 
   async def launch_alt(self, msg_):
     if msg_.author.id in self.launched:
-      await msg_.channel.send("You already launched the app!")
+      await msg_.author.send("You already launched the app!")
       return
     with open("cogs/commands/data.json","r+") as f:
       data = json.load(f)
       if not str(msg_.author.id) in data.keys():
-        await msg_.channel.send(f"New to CAPcord? Register now for free!\nRegistering is as easy as CAPcreate\n__Note:__ execute this in a server.")
+        await msg_.author.send(f"New to CAPcord? Register now for free!\nRegistering is as easy as CAPcreate\n__Note:__ execute this in a server.")
         return
       else:
-        await msg_.channel.send("Please send your 6-digit password here")
+        await msg_.author.send("Please send your 6-digit password here")
         def check(m):
           return m.author == msg_.author and m.guild == None and len(m.content) == 6
         try:
           msg = await self.bot.wait_for('message', timeout=60.0, check=check)
           if not msg.content==data[str(msg.author.id)]["password"]:
-            await msg.channel.send("Hey hacker! Stop trying to login this guy's account.")
+            await msg.author.send("Hey hacker! Stop trying to login this guy's account.")
             return
           else:
             self.launched.append(msg_.author.id)
@@ -578,7 +578,7 @@ class SocialMedia(commands.Cog):
                 content+=f"\n\n**NEW FRIEND REQUESTS**\n{string_requests}\nTo accept a friend request run `add`, then their USER ID"
             except:
               pass
-            await msg.channel.send(
+            await msg.author.send(
               content
               )
             await self.always_detect_message(msg)
@@ -603,7 +603,7 @@ class SocialMedia(commands.Cog):
         try:
           msg = await self.bot.wait_for('message', timeout=60.0, check=check)
           if not msg.content==data[str(ctx.author.id)]["password"]:
-            await msg.channel.send("Hey hacker! Stop trying to login this guy's account.")
+            await msg.author.send("Hey hacker! Stop trying to login this guy's account.")
             return
           else:
             self.launched.append(ctx.author.id)
@@ -625,7 +625,7 @@ class SocialMedia(commands.Cog):
                 content+=f"\n\n**NEW FRIEND REQUESTS**\n{string_requests}\nTo accept a friend request run `add`, then their USER ID"
             except:
               pass
-            await msg.channel.send(
+            await msg.author.send(
               content
               )
             await self.always_detect_message(ctx)

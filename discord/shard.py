@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 The MIT License (MIT)
 
@@ -45,6 +43,11 @@ from .errors import (
 
 from . import utils
 from .enums import Status
+
+__all__ = (
+    'AutoShardedClient',
+    'ShardInfo',
+)
 
 log = logging.getLogger(__name__)
 
@@ -319,7 +322,7 @@ class AutoShardedClient(Client):
 
     def _get_state(self, **options):
         return AutoShardedConnectionState(dispatch=self.dispatch,
-                                          handlers=self._handlers, syncer=self._syncer,
+                                          handlers=self._handlers,
                                           hooks=self._hooks, http=self.http, loop=self.loop, **options)
 
     @property
@@ -355,42 +358,6 @@ class AutoShardedClient(Client):
     def shards(self):
         """Mapping[int, :class:`ShardInfo`]: Returns a mapping of shard IDs to their respective info object."""
         return { shard_id: ShardInfo(parent, self.shard_count) for shard_id, parent in self.__shards.items() }
-
-    @utils.deprecated('Guild.chunk')
-    async def request_offline_members(self, *guilds):
-        r"""|coro|
-
-        Requests previously offline members from the guild to be filled up
-        into the :attr:`Guild.members` cache. This function is usually not
-        called. It should only be used if you have the ``fetch_offline_members``
-        parameter set to ``False``.
-
-        When the client logs on and connects to the websocket, Discord does
-        not provide the library with offline members if the number of members
-        in the guild is larger than 250. You can check if a guild is large
-        if :attr:`Guild.large` is ``True``.
-
-        .. warning::
-
-            This method is deprecated. Use :meth:`Guild.chunk` instead.
-
-        Parameters
-        -----------
-        \*guilds: :class:`Guild`
-            An argument list of guilds to request offline members for.
-
-        Raises
-        -------
-        InvalidArgument
-            If any guild is unavailable in the collection.
-        """
-        if any(g.unavailable for g in guilds):
-            raise InvalidArgument('An unavailable or non-large guild was passed.')
-
-        _guilds = sorted(guilds, key=lambda g: g.shard_id)
-        for shard_id, sub_guilds in itertools.groupby(_guilds, key=lambda g: g.shard_id):
-            for guild in sub_guilds:
-                await self._connection.chunk_guild(guild)
 
     async def launch_shard(self, gateway, shard_id, *, initial=False):
         try:
@@ -469,7 +436,7 @@ class AutoShardedClient(Client):
         await self.http.close()
         self.__queue.put_nowait(EventItem(EventType.clean_close, None, None))
 
-    async def change_presence(self, *, activity=None, status=None, afk=False, shard_id=None):
+    async def change_presence(self, *, activity=None, status=None, shard_id=None):
         """|coro|
 
         Changes the client's presence.
@@ -479,6 +446,9 @@ class AutoShardedClient(Client):
             game = discord.Game("with the API")
             await client.change_presence(status=discord.Status.idle, activity=game)
 
+        .. versionchanged:: 2.0
+            Removed the ``afk`` keyword-only parameter.
+
         Parameters
         ----------
         activity: Optional[:class:`BaseActivity`]
@@ -486,10 +456,6 @@ class AutoShardedClient(Client):
         status: Optional[:class:`Status`]
             Indicates what status to change to. If ``None``, then
             :attr:`Status.online` is used.
-        afk: :class:`bool`
-            Indicates if you are going AFK. This allows the discord
-            client to know how to handle push notifications better
-            for you in case you are actually idle and not lying.
         shard_id: Optional[:class:`int`]
             The shard_id to change the presence to. If not specified
             or ``None``, then it will change the presence of every
@@ -513,12 +479,12 @@ class AutoShardedClient(Client):
 
         if shard_id is None:
             for shard in self.__shards.values():
-                await shard.ws.change_presence(activity=activity, status=status, afk=afk)
+                await shard.ws.change_presence(activity=activity, status=status)
 
             guilds = self._connection.guilds
         else:
             shard = self.__shards[shard_id]
-            await shard.ws.change_presence(activity=activity, status=status, afk=afk)
+            await shard.ws.change_presence(activity=activity, status=status)
             guilds = [g for g in self._connection.guilds if g.shard_id == shard_id]
 
         activities = () if activity is None else (activity,)

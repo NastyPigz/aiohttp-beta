@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 The MIT License (MIT)
 
@@ -27,7 +25,6 @@ DEALINGS IN THE SOFTWARE.
 import asyncio
 from collections import namedtuple, deque
 import concurrent.futures
-import json
 import logging
 import struct
 import sys
@@ -162,8 +159,8 @@ class KeepAliveHandler(threading.Thread):
                         except KeyError:
                             msg = self.block_msg
                         else:
-                            stack = traceback.format_stack(frame)
-                            msg = '%s\nLoop thread traceback (most recent call last):\n%s' % (self.block_msg, ''.join(stack))
+                            stack = ''.join(traceback.format_stack(frame))
+                            msg = f'{self.block_msg}\nLoop thread traceback (most recent call last):\n{stack}'
                         log.warning(msg, self.shard_id, total)
 
             except Exception:
@@ -296,6 +293,12 @@ class DiscordWebSocket:
     def is_ratelimited(self):
         return self._rate_limiter.is_ratelimited()
 
+    def debug_log_receive(self, data, /):
+        self._dispatch('socket_raw_receive', data)
+
+    def log_receive(self, _, /):
+        pass
+
     @classmethod
     async def from_client(cls, client, *, initial=False, gateway=None, shard_id=None, session=None, sequence=None, resume=False):
         """Creates a main websocket for Discord from a :class:`Client`.
@@ -320,6 +323,10 @@ class DiscordWebSocket:
         ws.session_id = session
         ws.sequence = sequence
         ws._max_heartbeat_timeout = client._connection.heartbeat_timeout
+
+        if client._enable_debug_events:
+            ws.send = ws.debug_send
+            ws.log_receive = ws.debug_log_receive
 
         client._connection._update_references(ws)
 
@@ -375,13 +382,9 @@ class DiscordWebSocket:
                 },
                 'compress': True,
                 'large_threshold': 250,
-                'guild_subscriptions': self._connection.guild_subscriptions,
                 'v': 3
             }
         }
-
-        if not self._connection.is_bot:
-            payload['d']['synced_guilds'] = []
 
         if self.shard_id is not None and self.shard_count is not None:
             payload['d']['shard'] = [self.shard_id, self.shard_count]
@@ -416,8 +419,8 @@ class DiscordWebSocket:
         await self.send_as_json(payload)
         log.info('Shard ID %s has sent the RESUME payload.', self.shard_id)
 
-    async def received_message(self, msg):
-        self._dispatch('socket_raw_receive', msg)
+    async def received_message(self, msg, /):
+        self.log_receive(msg)
 
         if type(msg) is bytes:
             self._buffer.extend(msg)
@@ -427,10 +430,12 @@ class DiscordWebSocket:
             msg = self._zlib.decompress(self._buffer)
             msg = msg.decode('utf-8')
             self._buffer = bytearray()
-        msg = json.loads(msg)
+        msg = utils.from_json(msg)
 
         log.debug('For Shard ID %s: WebSocket Event: %s', self.shard_id, msg)
-        self._dispatch('socket_response', msg)
+        event = msg.get('t')
+        if event:
+            self._dispatch('socket_event_type', event)
 
         op = msg.get('op')
         data = msg.get('d')
@@ -482,8 +487,6 @@ class DiscordWebSocket:
 
             log.warning('Unknown OP code %s.', op)
             return
-
-        event = msg.get('t')
 
         if event == 'READY':
             self._trace = trace = data.get('_trace', [])
@@ -581,9 +584,13 @@ class DiscordWebSocket:
                 log.info('Websocket closed with %s, cannot reconnect.', code)
                 raise ConnectionClosed(self.socket, shard_id=self.shard_id, code=code) from None
 
-    async def send(self, data):
+    async def debug_send(self, data, /):
         await self._rate_limiter.block()
         self._dispatch('socket_raw_send', data)
+        await self.socket.send_str(data)
+
+    async def send(self, data, /):
+        await self._rate_limiter.block()
         await self.socket.send_str(data)
 
     async def send_as_json(self, data):
@@ -601,11 +608,13 @@ class DiscordWebSocket:
             if not self._can_handle_close():
                 raise ConnectionClosed(self.socket, shard_id=self.shard_id) from exc
 
-    async def change_presence(self, *, activity=None, status=None, afk=False, since=0.0):
+    async def change_presence(self, *, activity=None, status=None, since=0.0):
         if activity is not None:
             if not isinstance(activity, BaseActivity):
                 raise InvalidArgument('activity must derive from BaseActivity.')
-            activity = activity.to_dict()
+            activity = [activity.to_dict()]
+        else:
+            activity = []
 
         if status == 'idle':
             since = int(time.time() * 1000)
@@ -613,8 +622,8 @@ class DiscordWebSocket:
         payload = {
             'op': self.PRESENCE,
             'd': {
-                'game': activity,
-                'afk': afk,
+                'activities': activity,
+                'afk': False,
                 'since': since,
                 'status': status
             }
@@ -623,13 +632,6 @@ class DiscordWebSocket:
         sent = utils.to_json(payload)
         log.debug('Sending "%s" to change status', sent)
         await self.send(sent)
-
-    async def request_sync(self, guild_ids):
-        payload = {
-            'op': self.GUILD_SYNC,
-            'd': list(guild_ids)
-        }
-        await self.send_as_json(payload)
 
     async def request_chunks(self, guild_id, query=None, *, limit, user_ids=None, presences=False, nonce=None):
         payload = {
@@ -719,12 +721,17 @@ class DiscordVoiceWebSocket:
     CLIENT_CONNECT      = 12
     CLIENT_DISCONNECT   = 13
 
-    def __init__(self, socket, loop):
+    def __init__(self, socket, loop, *, hook=None):
         self.ws = socket
         self.loop = loop
         self._keep_alive = None
         self._close_code = None
         self.secret_key = None
+        if hook:
+            self._hook = hook
+
+    async def _hook(self, *args):
+        pass
 
     async def send_as_json(self, data):
         log.debug('Sending voice websocket frame: %s.', data)
@@ -758,12 +765,12 @@ class DiscordVoiceWebSocket:
         await self.send_as_json(payload)
 
     @classmethod
-    async def from_client(cls, client, *, resume=False):
+    async def from_client(cls, client, *, resume=False, hook=None):
         """Creates a voice websocket for the :class:`VoiceClient`."""
         gateway = 'wss://' + client.endpoint + '/?v=4'
         http = client._state.http
         socket = await http.ws_connect(gateway, compress=15)
-        ws = cls(socket, loop=client.loop)
+        ws = cls(socket, loop=client.loop, hook=hook)
         ws.gateway = gateway
         ws._connection = client
         ws._max_heartbeat_timeout = 60.0
@@ -831,6 +838,8 @@ class DiscordVoiceWebSocket:
             self._keep_alive = VoiceKeepAliveHandler(ws=self, interval=min(interval, 5.0))
             self._keep_alive.start()
 
+        await self._hook(self, msg)
+
     async def initial_connection(self, data):
         state = self._connection
         state.ssrc = data['ssrc']
@@ -886,7 +895,7 @@ class DiscordVoiceWebSocket:
         # This exception is handled up the chain
         msg = await asyncio.wait_for(self.ws.receive(), timeout=30.0)
         if msg.type is aiohttp.WSMsgType.TEXT:
-            await self.received_message(json.loads(msg.data))
+            await self.received_message(utils.from_json(msg.data))
         elif msg.type is aiohttp.WSMsgType.ERROR:
             log.debug('Received %s', msg)
             raise ConnectionClosed(self.ws, shard_id=None) from msg.data

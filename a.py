@@ -23,6 +23,11 @@ class MyContext(commands.Context):
         chb=True
       ):
     try:
+      channel = await self._get_channel()
+      print(channel)
+      state = self._state
+      print(state)
+      print(dir(state))
       return await super().send(content=content, embed=embed,file=file, files=files, delete_after=delete_after, allowed_mentions=discord.AllowedMentions(roles=False, users=False, everyone=False))
     # except discord.HTTPException:
     except Exception as e:
@@ -71,8 +76,8 @@ intents=intents, help_command=None)
 @bot.listen()
 async def on_ready():
   print("Raaannning")
-  input("PLS EXIT\n")
-  exit(0)
+  # input("PLS EXIT\n")
+  # exit(0)
 
 @bot.check
 async def commands_check(ctx):
