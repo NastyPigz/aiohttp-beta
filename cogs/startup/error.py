@@ -36,8 +36,8 @@ class ErrorHandler(commands.Cog):
           return
       except:
         pass
-      if ctx.guild == None:
-        await ctx.send("Sorry but we've disabled DM commands")
+      if not self.bot.get_channel(ctx.channel.id):
+        await ctx.send("This command does not work in Threads!")
         return
       else:
         pass

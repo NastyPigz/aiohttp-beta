@@ -15,6 +15,14 @@
         "version": 1,
         "index": 2618
       }
+    ],
+    "storage.py": [
+      {
+        "id": "1dd2a07c-0504-43d5-8d0a-8a878a17d0a4",
+        "line": 8,
+        "version": 1,
+        "index": 306
+      }
     ]
   }
 }

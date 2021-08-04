@@ -1,5 +1,3 @@
-# -*- coding: utf-8 -*-
-
 """
 The MIT License (MIT)
 
@@ -24,10 +22,20 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
+__all__ = (
+    'RawMessageDeleteEvent',
+    'RawBulkMessageDeleteEvent',
+    'RawMessageUpdateEvent',
+    'RawReactionActionEvent',
+    'RawReactionClearEvent',
+    'RawReactionClearEmojiEvent',
+    'RawIntegrationDeleteEvent',
+)
+
 class _RawReprMixin:
     def __repr__(self):
-        value = ' '.join('%s=%r' % (attr, getattr(self, attr)) for attr in self.__slots__)
-        return '<%s %s>' % (self.__class__.__name__, value)
+        value = ' '.join(f'{attr}={getattr(self, attr)!r}' for attr in self.__slots__)
+        return f'<{self.__class__.__name__} {value}>'
 
 class RawMessageDeleteEvent(_RawReprMixin):
     """Represents the event payload for a :func:`on_raw_message_delete` event.
@@ -215,3 +223,29 @@ class RawReactionClearEmojiEvent(_RawReprMixin):
             self.guild_id = int(data['guild_id'])
         except KeyError:
             self.guild_id = None
+
+class RawIntegrationDeleteEvent(_RawReprMixin):
+    """Represents the payload for a :func:`on_raw_integration_delete` event.
+
+    .. versionadded:: 2.0
+
+    Attributes
+    -----------
+    integration_id: :class:`int`
+        The ID of the integration that got deleted.
+    application_id: Optional[:class:`int`]
+        The ID of the bot/OAuth2 application for this deleted integration.
+    guild_id: :class:`int`
+        The guild ID where the integration got deleted.
+    """
+
+    __slots__ = ('integration_id', 'application_id', 'guild_id')
+
+    def __init__(self, data):
+        self.integration_id = int(data['id'])
+        self.guild_id = int(data['guild_id'])
+
+        try:
+            self.application_id = int(data['application_id'])
+        except KeyError:
+            self.application_id = None

@@ -1,15 +1,8 @@
-import discord, aiohttp, sys
+import discord, aiohttp
 from discord.ext import commands, tasks
-import random, asyncio, re, time, datetime, logging, os, json
-from data.profanity import swearwords
-from asyncio.tasks import Task
+import random, asyncio, re, datetime, logging, os
 from other.mongo import cluster
-from data.json.shop import shop_items
 from data.json.slash import help_slash
-from data.json.badge import badge_items
-import smtplib
-from cogs.startup.ready import StartUp
-from discord_slash import SlashCommand, SlashContext
 from data.embed.general import embed_General
 from data.embed.help import embed_
 from data.embed.mod import embed_Moderation
@@ -17,12 +10,11 @@ from data.embed.emoji import embed_Emoji
 from data.embed.currency import embed_Currency
 from data.embed.other import embed_Other
 from data.json.help import help_menu
-from discord_slash.utils import manage_components
-from discord_slash.model import ButtonStyle
-from discord_slash.context import ComponentContext
-import logging
-from discord_slash.utils.manage_components import create_select, create_select_option
+from discord.errors import InvalidArgument
+from discord.mentions import AllowedMentions
+from discord.file import File
 from handler import ch
+from help import CustomHelp
 
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
@@ -33,15 +25,6 @@ handler.setFormatter(
     logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
 
-
-#number value, not string. This stores a list important to a part of the help command subclass
-# 600034099918536718 is _WeDemBois_. The most pog dev in history
-admins = [
-  763854419484999722,
-  725081836874760224,
-  521347381636104212,
-  600034099918536718,
-]
 
 
 async def get_pre(bot, message):
@@ -85,7 +68,6 @@ class MyContext(commands.Context):
         allowed_mentions=None,
         reference=None,
         view=None,
-        components=None,
         chb=True
       ):
     try:
@@ -99,7 +81,8 @@ class MyContext(commands.Context):
         content = await ch(self.prefix, self.author, self.bot, content, cog_)
       else:
         pass
-      return await super().send(content=content, embed=embed,file=file, files=files, delete_after=delete_after, allowed_mentions=discord.AllowedMentions(roles=False, users=False, everyone=False), components=components)
+      allowed_mentions=discord.AllowedMentions(roles=False, users=False, everyone=False)
+      return await super().send(content=content, embed=embed, embeds=embeds, file=file, files=files, delete_after=delete_after, allowed_mentions=allowed_mentions, view=view)
     # except discord.HTTPException:
     except Exception as e:
       print(e)
@@ -117,14 +100,13 @@ class MyContext(commands.Context):
         reference=None,
         mention_author=None,
         view=None,
-        components=None,
         chb=True):
     try:
       if chb:
         content = await ch(self.prefix, self.author, self.bot, content, self.command.cog)
       else:
         pass
-      return await super().reply(content=content, embed=embed, file=file, files=files, delete_after=delete_after, allowed_mentions=discord.AllowedMentions(roles=False, users=False, everyone=False, replied_user=False), components=components)
+      return await super().reply(content=content, embed=embed, file=file, files=files, delete_after=delete_after, allowed_mentions=discord.AllowedMentions(roles=False, users=False, everyone=False, replied_user=False), view=view)
     # except discord.HTTPException:
     except Exception as e:
       print(e)
@@ -144,341 +126,41 @@ client = MyBot(case_insensitive=True,
 command_prefix=get_pre,
 strip_after_prefix=True,
 intents=intents)
-client.selector = None
 client.smdata = None
 
-@tasks.loop()
-async def selector_help():
-  await client.wait_until_ready()
-  embed = discord.Embed(
-    title="Help", 
-    url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", 
-    description="Here are all the categories.",
-    color=discord.Colour.random()
-    )
-  d = client.cogs
-  for key in d.keys():
-    try:
-      if d[key].hidden:
-        continue
-    except:
-      continue
-    embed.add_field(
-      name=key.capitalize(),
-      value="`{}`".format("<prefix>"+'help '+key.lower()), 
-      inline=True
-    )
-  if not client.selector == None:
-    interaction: ComponentContext = await manage_components.wait_for_component(
-      client,
-      components=client.selector
-    )
-    if "All" in interaction.selected_options:
-      embed=embed
-    else:
-      embed = await CustomHelp.get_cog_help(None, client.get_cog(interaction.selected_options[0]))
-    await interaction.edit_origin(embed=embed)
+# @tasks.loop()
+# async def selector_help():
+#   await client.wait_until_ready()
+#   embed = discord.Embed(
+#     title="Help", 
+#     url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", 
+#     description="Here are all the categories.",
+#     color=discord.Colour.random()
+#     )
+#   d = client.cogs
+#   for key in d.keys():
+#     try:
+#       if d[key].hidden:
+#         continue
+#     except:
+#       continue
+#     embed.add_field(
+#       name=key.capitalize(),
+#       value="`{}`".format("<prefix>"+'help '+key.lower()), 
+#       inline=True
+#     )
+#   if not client.selector == None:
+#     interaction= await wait_for_button_click(
+#       client,
+#       components=client.selector
+#     )
+#     if "All" in interaction.selected_options:
+#       embed=embed
+#     else:
+#       embed = await CustomHelp.get_cog_help(None, client.get_cog(interaction.selected_options[0]))
+#     await interaction.edit_origin(embed=embed)
 
-selector_help.start()
-
-class CustomHelp(commands.HelpCommand):
-  def get_command_signature(self, command):
-    return '%s%s %s' % (
-      self.context.clean_prefix, 
-      command.qualified_name, 
-      command.signature
-    )
-
-  async def send_bot_help(self, mapping):
-    embed = discord.Embed(
-      title="Help", 
-      url="https://www.youtube.com/watch?v=dQw4w9WgXcQ", 
-      description="Here are all the categories.",
-      color=discord.Colour.random()
-      )
-    d = client.cogs
-    paginationList = [None]
-    continue_=None
-    for key in d.keys():
-      try:
-        if not self.context.author.id in admins:
-          if d[key].hidden:
-            continue
-        elif continue_:
-          if d[key].hidden:
-            continue
-        elif continue_ == False:
-          pass
-        else:
-          def check(m):
-            return m.author == self.context.author and m.channel == self.context.channel
-          await self.context.send("say r or n")
-          msg = await self.context.bot.wait_for('message', check=check)
-          if not msg.content.lower() == "r":
-            continue_ = True
-            continue
-          else:
-            continue_ = False
-            pass
-      except:
-        continue
-      embed.add_field(
-        name=key.capitalize(),
-        value="`{}`".format(self.context.prefix+'help '+key.lower()), 
-        inline=True
-      )
-      paginationList.append(key.lower())
-    current = 0
-    buttons = [
-          manage_components.create_button(
-              style=ButtonStyle.URL,
-              label="Invite me",
-              url="https://discord.com/oauth2/authorize?client_id=823699570147065876&permissions=268823670&redirect_uri=https%3A%2F%2Fdiscord.com%2Foauth2%2Fauthorize%3Fclient_id%3DCapitalismBot&scope=bot%20applications.commands",
-          ),
-          manage_components.create_button(
-              style=ButtonStyle.URL,
-              label="Support Server",
-              url="https://discord.gg/capitalism",
-          ),
-        ]
-    action_row = manage_components.create_actionrow(*buttons)
-    buttons2 = [
-          manage_components.create_button(
-              style=ButtonStyle.green,
-              label="⬅️",
-              custom_id="back",
-          ),
-          manage_components.create_button(
-              style=ButtonStyle.grey,
-              label=f"Page {int(paginationList.index(paginationList[current])) + 1}/{len(paginationList)}",
-              disabled=True
-          ),
-          manage_components.create_button(
-              style=ButtonStyle.green,
-              label="➡️",
-              custom_id="front"
-          )
-        ]
-    action_row2 = manage_components.create_actionrow(*buttons2)
-    mainMessage = await self.context.reply(
-      embed = embed,
-      components=[action_row2, action_row],
-      mention_author=False
-    )
-    while True:
-      try:
-          interaction: ComponentContext = await manage_components.wait_for_component(
-            self.context.bot,
-            components=action_row2,
-            messages=mainMessage,
-            timeout = 30.0,
-          )
-          if interaction.origin_message_id != mainMessage.id:
-            await interaction.defer(edit_origin=True)
-            continue
-          if interaction.author != self.context.author:
-            the_num = paginationList[current+1]
-            if the_num is None:
-              embed_edited=embed
-            else:
-              embed_edited = await self.get_cog_help(self.context.bot.get_cog(the_num))
-            await interaction.send(
-              embed = embed_edited,
-              components = [client.selector, action_row],
-              hidden=True
-            )
-            continue
-          if interaction.custom_id == "back":
-              current -= 1
-          elif interaction.custom_id == "front":
-              current += 1
-          if current == len(paginationList):
-              current = 0
-          elif current < 0:
-              current = len(paginationList) - 1
-          buttons = [
-            manage_components.create_button(
-                style=ButtonStyle.URL,
-                label="Invite me",
-                url="https://discord.com/oauth2/authorize?client_id=823699570147065876&permissions=268823670&redirect_uri=https%3A%2F%2Fdiscord.com%2Foauth2%2Fauthorize%3Fclient_id%3DCapitalismBot&scope=bot%20applications.commands",
-            ),
-            manage_components.create_button(
-                style=ButtonStyle.URL,
-                label="Support Server",
-                url="https://discord.gg/capitalism",
-            ),
-          ]
-          action_row = manage_components.create_actionrow(*buttons)
-          buttons2 = [
-                manage_components.create_button(
-                    style=ButtonStyle.green,
-                    label="⬅️",
-                    custom_id = "back"
-                ),
-                manage_components.create_button(
-                    style=ButtonStyle.grey,
-                    label=f"Page {int(paginationList.index(paginationList[current])) + 1}/{len(paginationList)}",
-                    custom_id = "cur",
-                    disabled=True
-                ),
-                manage_components.create_button(
-                    style=ButtonStyle.green,
-                    label="➡️",
-                    custom_id = "front"
-                )
-              ]
-          action_row2 = manage_components.create_actionrow(*buttons2)
-          the_num = paginationList[current]
-          if the_num is None:
-            embed_edited=embed
-          else:
-            embed_edited = await self.get_cog_help(self.context.bot.get_cog(the_num))
-          await interaction.edit_origin(
-              embed = embed_edited,
-              components = [action_row2, action_row]
-          )
-      except asyncio.TimeoutError:
-          buttons = [
-            manage_components.create_button(
-                style=ButtonStyle.URL,
-                label="Invite me",
-                url="https://discord.com/oauth2/authorize?client_id=823699570147065876&permissions=268823670&redirect_uri=https%3A%2F%2Fdiscord.com%2Foauth2%2Fauthorize%3Fclient_id%3DCapitalismBot&scope=bot%20applications.commands"
-            ),
-            manage_components.create_button(
-                style=ButtonStyle.URL,
-                label="Support Server",
-                url="https://discord.gg/capitalism"
-            ),
-            manage_components.create_button(
-                style=ButtonStyle.red,
-                label="Timeout",
-                disabled=True
-            ),
-          ]
-          action_row = manage_components.create_actionrow(*buttons)
-          await mainMessage.edit(
-              components = [
-                  action_row
-              ]
-          )
-          break
-
-  async def get_cog_help(self, cog):
-    try:
-      if cog.qualified_name.lower()=="jishaku":
-        return
-      else:
-        try:
-          if cog.hidden:
-            return
-        except:
-          return
-      cmd=[]
-      for commandd in cog.walk_commands():
-        if (commandd.hidden==True):
-          continue
-        cmd.append(commandd)
-      command = ''
-      for cc in cmd:
-        command += f'`{cc.name}`, '
-      embed = discord.Embed(
-        title=cog.qualified_name, 
-        url="https://www.youtube.com/watch?v=dQw4w9WgXcQm", 
-        description=command,
-        color=discord.Colour.random()
-        )
-      return embed
-    except Exception as e:
-      print(e)
-
-  async def send_cog_help(self, cog):
-    if cog.qualified_name.lower()=="jishaku":
-      return
-    else:
-      try:
-        if cog.hidden:
-          return
-      except:
-        return
-    cmd=[]
-    for commandd in cog.walk_commands():
-      if (commandd.hidden==True):
-        continue
-      cmd.append(commandd)
-    command = ''
-    for cc in cmd:
-      command += f'`{cc.name}`, '
-    embed = discord.Embed(
-      title=cog.qualified_name, 
-      url="https://www.youtube.com/watch?v=dQw4w9WgXcQm", 
-      description=command,
-      color=discord.Colour.random()
-      )
-    await self.context.send(embed=embed)
-
-  async def send_group_help(self, group):
-    if not self.context.author.id in admins:
-      return await self.context.message.add_reaction(":think:825452368128376843")
-    content=""
-    for command in group.commands:
-      content+="`{}`, ".format(command.name)
-    await self.context.send(content)
-
-  async def send_command_help(self, command):
-    if not isinstance(command, commands.core.Command):
-      clss = client.get_commands(command)
-    else:
-      clss = command
-    if not clss.cog == None:
-      if ((clss.hidden == True) and (self.context.author.id not in admins)) or ((clss.cog.hidden == True) and (self.context.author.id not in admins)):
-        return await self.context.message.add_reaction(":think:825452368128376843")
-    else:
-      return await self.context.message.add_reaction(":think:825452368128376843")
-    embed = discord.Embed(
-      title=command,
-      color=discord.Colour.random()
-    )
-    embed.add_field(
-        name='Usage:',
-        value=self.get_command_signature(command),
-        inline=False
-    )
-    if len(clss.aliases) == 0:
-      embed.add_field(
-        name='Aliases:',
-        # value='None, like 0. Zip, Natta, None.',
-        value='None',
-        inline=False
-      )
-    else:
-      embed.add_field(
-        name='Aliases:',
-        value=', '.join(clss.aliases),
-        inline=False
-      )
-    if not clss._buckets._cooldown == None:
-      rate = clss._buckets._cooldown.rate
-      embed.add_field(
-        name='Cooldown:',
-        value="{} seconds every {} {}".format(clss._buckets._cooldown.per, rate, "commands" if rate > 1 else "command"),
-        inline=False
-      )
-    else:
-      embed.add_field(
-        name='Cooldown:',
-        value="None",
-        inline=False
-      )
-    embed.add_field(
-      name='Description:',
-      value=clss.help,
-      inline=False
-    )
-
-    embed.set_footer(text="\"<>\" => required | \"[]\" => optional")
-
-    await self.context.send(embed=embed)
-           
+# selector_help.start()
 
 help_attr={
    'name': "help",
@@ -564,7 +246,7 @@ extensions = [
     'cogs.startup.ready', 'cogs.currency.Currency', 'cogs.emoji.emojis',
     'cogs.commands.Data', "cogs.commands.SocialMedia", "cogs.startup.web", 'other.mongo', 'cogs.growth.growth', 'jishaku', 'cogs.commands.Evaluation',
     "cogs.debug", "cogs.commands.Computer", "cogs.experimental",
-    "cogs.music"
+    "cogs.music", "cogs.help.help"
 ]
 
 @client.command()
@@ -597,11 +279,12 @@ async def check_cmds(ctx):
   #     return False
   banned = client.botbanned
   try:
-    channel = await client.fetch_channel(ctx.channel.id)
-    if isinstance(channel, discord.channel.DMChannel):
+    if isinstance(ctx.channel, discord.DMChannel):
       return False
-    else:
-      dm_channel=False
+    elif client.get_channel(ctx.channel.id) is None:
+      if isinstance(await client.fetch_channel(ctx.channel.id), discord.DMChannel):
+        return False
+    dm_channel=False
   except:
     dm_channel=False
   logs = client.logsdb
@@ -625,7 +308,7 @@ async def check_cmds(ctx):
   # return not ((ctx.author.id in await get_bot_banned()) or (ctx.guild == None) or (ctx.author.id in await get_spam_banned()) or client.loadng or (str(ctx.command) in (await get_log_data()).get(str(ctx.guild.id), {}).get("disabled", [])))
 
 @commands.check
-async def check_commands(ctx: SlashContext):
+async def check_commands(ctx):
   if not client.is_ready():
     await ctx.send("I am just starting!")
     return False
@@ -657,7 +340,7 @@ async def check_commands(ctx: SlashContext):
     return True
 
 @client.event
-async def on_slash_command(ctx: SlashContext):
+async def on_slash_command(ctx):
 	try:
 		client.cmdintervals[str(ctx.author.id)]
 	except:
@@ -706,7 +389,7 @@ async def on_slash_command(ctx: SlashContext):
 				await ctx.send(embed=em)
 
 @client.event
-async def on_slash_command_error(ctx: SlashContext, er):
+async def on_slash_command_error(ctx, er):
   print(er)
   if ctx.guild == None:
     await ctx.send("You cannot use slash commands in DMs.", hidden=True)
@@ -789,7 +472,8 @@ async def reload(ctx, *, arg):
 #     else:
 #       await ctx.send("you need at least 500 coins to rob someone.")
 
-slash = SlashCommand(client, sync_commands=True)
+# slesh = SlashClient(client, sync_commands=True)
+# slash = None
 
 options = [{
 "name": "argument",
@@ -798,183 +482,183 @@ options = [{
 "type": 3
 }]
   
-@slash.slash(name="Prefix", description="Gives you the bot prefix", options=[])
-@check_commands
-async def _prefix(ctx: SlashContext):
-  prefix = client.logsdb
-  try:
-    prefix = prefix[str(ctx.guild.id)]["prefix"]
-    prefix = str(prefix).lstrip('[').rstrip(']')
-    await ctx.send(f"Hi! My prefix is {prefix}!")
-  except:
-    await ctx.send("Hi! My prefix is 'CAP' or 'c/'!")
+# @slash.slash(name="Prefix", description="Gives you the bot prefix", options=[])
+# @check_commands
+# async def _prefix(ctx: SlashContext):
+#   prefix = client.logsdb
+#   try:
+#     prefix = prefix[str(ctx.guild.id)]["prefix"]
+#     prefix = str(prefix).lstrip('[').rstrip(']')
+#     await ctx.send(f"Hi! My prefix is {prefix}!")
+#   except:
+#     await ctx.send("Hi! My prefix is 'CAP' or 'c/'!")
 
 
-@slash.slash(name="Help", description="Run this command for help!", options=options)
-@check_commands
-async def _help(ctx: SlashContext, argument=None):
-  embed = await embed_(ctx)
-  embed.color = discord.Color.random()
-  embed_General.color = discord.Color.random()
-  embed_Moderation.color = discord.Color.random()
-  embed_Other.color = discord.Color.random()
-  embed_Emoji.color = discord.Color.random()
-  embed_Currency.color = discord.Color.random()
-  inpt = None
-  if argument == None:
-    buttons = [
-      manage_components.create_button(
-          style=ButtonStyle.URL,
-          label="Invite me",
-          url=
-          "https://discord.com/oauth2/authorize?client_id=823699570147065876&permissions=268823670&redirect_uri=https%3A%2F%2Fdiscord.com%2Foauth2%2Fauthorize%3Fclient_id%3DCapitalismBot&scope=bot%20applications.commands"
-      ),
-      manage_components.create_button(
-          style=ButtonStyle.URL,
-          label="Support Server",
-          url="https://discord.gg/capitalism"),
-    ]  
-    action_row = manage_components.create_actionrow(*buttons)
-    embed.add_field(name="Slash", value="`/help slash`")
-    await ctx.send(embed=embed, components=[action_row])
-  else:
-    inpt = argument.lower()
-    if inpt == "all":
-      embed.add_field(name="Slash", value="`/help slash`")
-      buttons = [
-        manage_components.create_button(
-            style=ButtonStyle.URL,
-            label="Invite me",
-            url=
-            "https://discord.com/oauth2/authorize?client_id=823699570147065876&permissions=268823670&redirect_uri=https%3A%2F%2Fdiscord.com%2Foauth2%2Fauthorize%3Fclient_id%3DCapitalismBot&scope=bot%20applications.commands"
-        ),
-        manage_components.create_button(
-            style=ButtonStyle.URL,
-            label="Support Server",
-            url="https://discord.gg/capitalism"),
-      ]
-      action_row = manage_components.create_actionrow(*buttons)
-      await ctx.send(embed=embed, components=[action_row])
-    elif inpt == "moderation":
-      await ctx.send(embed=embed_Moderation)
-    elif inpt == "other":
-      await ctx.send(embed=embed_Other)
-    elif inpt == "emoji":
-      await ctx.send(embed=embed_Emoji)
-    elif inpt == "currency":
-      await ctx.send(embed=embed_Currency)
-    elif inpt == "general":
-      await ctx.send(embed=embed_General)
-    elif inpt == "slash":
-      embed_Slash = discord.Embed(
-        title="All Slash Commmands",
-        description=
-        "`communism`, `prefix`, `help`, `invite`, `support`, `website`, `pograte`, `think`"
-    )
-      await ctx.send(embed=embed_Slash)
-    elif inpt == "data":
-      embed_Data = discord.Embed(color=discord.Color.random()) 
-      embed_Data.add_field(
-        name="Data Type Commands",
-        value="`removedata`, `removelogs`, `removeall`")
-      await ctx.send(embed=embed_Data)
-    else:
-      try:
-        if inpt in slash.commands.keys():
-          try:
-            desc = help_slash[inpt]["use"]
-            footer = help_slash[inpt]["footer"]
-            em = discord.Embed(
-              title=inpt,
-              description=f"__**Description**__: {desc}")
-            em.set_footer(text=f"Command format --- {footer}")
-            await ctx.send(embed=em)
-          except:
-            await ctx.send(
-              f"{inpt} is a valid command but no help source was found."
-            )
-        else:
-          command = client.get_command(inpt)
-          inpt = command.name
-          try:
-            desc = help_menu[inpt]["use"]
-            cooldown = help_menu[inpt]["cooldown"]
-            alias = help_menu[inpt]["aliases"]
-            footer = help_menu[inpt]["footer"]
-            em = discord.Embed(
-              title=inpt,
-              description=
-              f"__**Description**__: {desc} \n __**Cooldown**__: {cooldown} seconds \n __**Aliases**__: {alias}"
-            )
-            em.set_footer(text=f"Command format --- {footer}")
-            await ctx.send(embed=em)
-          except:
-            await ctx.send(
-              f"{command.name} is a valid command but no help source was found."
-            )
-      except:
-        await ctx.send("that is not a valid category or command!")
+# @slash.slash(name="Help", description="Run this command for help!", options=options)
+# @check_commands
+# async def _help(ctx: SlashContext, argument=None):
+#   embed = await embed_(ctx)
+#   embed.color = discord.Color.random()
+#   embed_General.color = discord.Color.random()
+#   embed_Moderation.color = discord.Color.random()
+#   embed_Other.color = discord.Color.random()
+#   embed_Emoji.color = discord.Color.random()
+#   embed_Currency.color = discord.Color.random()
+#   inpt = None
+#   if argument == None:
+#     buttons = [
+#       manage_components.create_button(
+#           style=ButtonStyle.URL,
+#           label="Invite me",
+#           url=
+#           "https://discord.com/oauth2/authorize?client_id=823699570147065876&permissions=268823670&redirect_uri=https%3A%2F%2Fdiscord.com%2Foauth2%2Fauthorize%3Fclient_id%3DCapitalismBot&scope=bot%20applications.commands"
+#       ),
+#       manage_components.create_button(
+#           style=ButtonStyle.URL,
+#           label="Support Server",
+#           url="https://discord.gg/capitalism"),
+#     ]  
+#     action_row = manage_components.create_actionrow(*buttons)
+#     embed.add_field(name="Slash", value="`/help slash`")
+#     await ctx.send(embed=embed, components=[action_row])
+#   else:
+#     inpt = argument.lower()
+#     if inpt == "all":
+#       embed.add_field(name="Slash", value="`/help slash`")
+#       buttons = [
+#         manage_components.create_button(
+#             style=ButtonStyle.URL,
+#             label="Invite me",
+#             url=
+#             "https://discord.com/oauth2/authorize?client_id=823699570147065876&permissions=268823670&redirect_uri=https%3A%2F%2Fdiscord.com%2Foauth2%2Fauthorize%3Fclient_id%3DCapitalismBot&scope=bot%20applications.commands"
+#         ),
+#         manage_components.create_button(
+#             style=ButtonStyle.URL,
+#             label="Support Server",
+#             url="https://discord.gg/capitalism"),
+#       ]
+#       action_row = manage_components.create_actionrow(*buttons)
+#       await ctx.send(embed=embed, components=[action_row])
+#     elif inpt == "moderation":
+#       await ctx.send(embed=embed_Moderation)
+#     elif inpt == "other":
+#       await ctx.send(embed=embed_Other)
+#     elif inpt == "emoji":
+#       await ctx.send(embed=embed_Emoji)
+#     elif inpt == "currency":
+#       await ctx.send(embed=embed_Currency)
+#     elif inpt == "general":
+#       await ctx.send(embed=embed_General)
+#     elif inpt == "slash":
+#       embed_Slash = discord.Embed(
+#         title="All Slash Commmands",
+#         description=
+#         "`communism`, `prefix`, `help`, `invite`, `support`, `website`, `pograte`, `think`"
+#     )
+#       await ctx.send(embed=embed_Slash)
+#     elif inpt == "data":
+#       embed_Data = discord.Embed(color=discord.Color.random()) 
+#       embed_Data.add_field(
+#         name="Data Type Commands",
+#         value="`removedata`, `removelogs`, `removeall`")
+#       await ctx.send(embed=embed_Data)
+#     else:
+#       try:
+#         if inpt in slash.commands.keys():
+#           try:
+#             desc = help_slash[inpt]["use"]
+#             footer = help_slash[inpt]["footer"]
+#             em = discord.Embed(
+#               title=inpt,
+#               description=f"__**Description**__: {desc}")
+#             em.set_footer(text=f"Command format --- {footer}")
+#             await ctx.send(embed=em)
+#           except:
+#             await ctx.send(
+#               f"{inpt} is a valid command but no help source was found."
+#             )
+#         else:
+#           command = client.get_command(inpt)
+#           inpt = command.name
+#           try:
+#             desc = help_menu[inpt]["use"]
+#             cooldown = help_menu[inpt]["cooldown"]
+#             alias = help_menu[inpt]["aliases"]
+#             footer = help_menu[inpt]["footer"]
+#             em = discord.Embed(
+#               title=inpt,
+#               description=
+#               f"__**Description**__: {desc} \n __**Cooldown**__: {cooldown} seconds \n __**Aliases**__: {alias}"
+#             )
+#             em.set_footer(text=f"Command format --- {footer}")
+#             await ctx.send(embed=em)
+#           except:
+#             await ctx.send(
+#               f"{command.name} is a valid command but no help source was found."
+#             )
+#       except:
+#         await ctx.send("that is not a valid category or command!")
 
 
-@slash.slash(name="Communism", description="Will ban you", options=[])
-@check_commands
-async def _communism(ctx: SlashContext):
-  await ctx.send("Capitalism is better", hidden=True)
+# @slash.slash(name="Communism", description="Will ban you", options=[])
+# @check_commands
+# async def _communism(ctx: SlashContext):
+#   await ctx.send("Capitalism is better", hidden=True)
 
 
-@slash.slash(name="Invite", description="Posts the invite link", options=[])
-@check_commands
-async def _invite(ctx: SlashContext):
-  await ctx.send(
-    "[Click me for the invite](<https://discord.com/api/oauth2/authorize?client_id=823699570147065876&permissions=268823670&redirect_uri=https%3A%2F%2Fdiscord.com%2Foauth2%2Fauthorize%3Fclient_id%3DCapitalismBot&scope=bot%20applications.commands>)",
-    hidden=True)
+# @slash.slash(name="Invite", description="Posts the invite link", options=[])
+# @check_commands
+# async def _invite(ctx: SlashContext):
+#   await ctx.send(
+#     "[Click me for the invite](<https://discord.com/api/oauth2/authorize?client_id=823699570147065876&permissions=268823670&redirect_uri=https%3A%2F%2Fdiscord.com%2Foauth2%2Fauthorize%3Fclient_id%3DCapitalismBot&scope=bot%20applications.commands>)",
+#     hidden=True)
 
 
-@slash.slash(name="Support",
-            description="Posts the support server",
-            options=[])
-@check_commands
-async def _support(ctx: SlashContext):
-  await ctx.send("https://discord.gg/capitalism", hidden=True)
+# @slash.slash(name="Support",
+#             description="Posts the support server",
+#             options=[])
+# @check_commands
+# async def _support(ctx: SlashContext):
+#   await ctx.send("https://discord.gg/capitalism", hidden=True)
 
 
-@slash.slash(name="pograte", description="POG RATE", options=[])
-@check_commands
-async def _pograte(ctx: SlashContext):
-  number = random.randint(1, 100)
-  embedPog = discord.Embed(
-    title="POG RATE MACHINE",
-    description="You are {}% pog <:littlepog:825452143657353226>".format(
-        number),
-    color=discord.Color.random())
-  await ctx.send(embed=embedPog, hidden=True)
+# @slash.slash(name="pograte", description="POG RATE", options=[])
+# @check_commands
+# async def _pograte(ctx: SlashContext):
+#   number = random.randint(1, 100)
+#   embedPog = discord.Embed(
+#     title="POG RATE MACHINE",
+#     description="You are {}% pog <:littlepog:825452143657353226>".format(
+#         number),
+#     color=discord.Color.random())
+#   await ctx.send(embed=embedPog, hidden=True)
 
 
-@slash.slash(name="website", description="Posts website", options=[])
-@check_commands
-async def _website(ctx: SlashContext):
-  await ctx.send("https://discord.capitalismbot.repl.co", hidden=True)
+# @slash.slash(name="website", description="Posts website", options=[])
+# @check_commands
+# async def _website(ctx: SlashContext):
+#   await ctx.send("https://discord.capitalismbot.repl.co", hidden=True)
 
 
-options_think = [{
-  "name": "seconds",
-  "description": "How long should I think? (In seconds)",
-  "required": False,
-  "type": 4
-}]
+# options_think = [{
+#   "name": "seconds",
+#   "description": "How long should I think? (In seconds)",
+#   "required": False,
+#   "type": 4
+# }]
 
 
-@slash.slash(name="think",
-            description="I will think a lot",
-            options=options_think)
-async def _think(ctx: SlashContext, seconds=1):
-  await ctx.defer()
-  if seconds > 840:
-    await ctx.send("Sorry, I cannot think more than 14 minutes.")
-  await asyncio.sleep(seconds)
-  await ctx.send(
-    f"I thought for {seconds} seconds, but still don't know how intelligent you are."
-)
+# @slash.slash(name="think",
+#             description="I will think a lot",
+#             options=options_think)
+# async def _think(ctx: SlashContext, seconds=1):
+#   await ctx.defer()
+#   if seconds > 840:
+#     await ctx.send("Sorry, I cannot think more than 14 minutes.")
+#   await asyncio.sleep(seconds)
+#   await ctx.send(
+#     f"I thought for {seconds} seconds, but still don't know how intelligent you are."
+# )
 
 for extension in extensions:
 	client.load_extension(extension)

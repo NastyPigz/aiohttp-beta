@@ -4,13 +4,10 @@ from other.mongo import cluster, func_bitcoin
 from data.json.shop import shop_items
 from data.json.badge import badge_items
 import asyncio
-from discord_slash.utils.manage_components import create_select, create_select_option
-from discord_slash.utils import manage_components
 
 class StartUp(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
-    self.data = bot.data
     self.loop = asyncio.get_event_loop()
     self.hidden=True
   
@@ -18,30 +15,6 @@ class StartUp(commands.Cog):
   async def on_ready(self):
     self.bot.loadng=True
     self.bot.remove_command("jsk")
-    options=[]
-    d = self.bot.cogs
-    paginationList = [None]
-    for key in d.keys():
-      try:
-        if d[key].hidden:
-          continue
-      except:
-        continue
-      paginationList.append(key.lower())
-    for i in paginationList:
-      if i is None:
-        options.append(create_select_option(
-          label="All", 
-          value="All"
-        ))
-        continue
-      options.append(create_select_option(
-      label=i, 
-      value=i
-      ))
-    select = create_select(options=options, min_values=1, max_values=1, custom_id="help_select")
-    action_row3=manage_components.create_actionrow(select)
-    self.bot.selector = action_row3
     db = self.bot.maindb
     for id, document in db.items():
       if "_id" not in document:

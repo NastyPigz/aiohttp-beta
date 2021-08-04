@@ -1,9 +1,6 @@
 from discord.ext import commands
 import discord
 import asyncio
-from discord_slash.utils import manage_components
-from discord_slash.model import ButtonStyle
-from discord_slash.context import ComponentContext
 
 class Help(commands.Cog):
   def __init__(self, bot):
@@ -18,52 +15,31 @@ class Help(commands.Cog):
     )
     embed.set_author(name="A WILD GIFT APPEARS!       ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀")
     embed.set_thumbnail(url="https://media.discordapp.net/attachments/764113682598723584/854854416108355614/EmSIbDzXYAAb4R7.png?width=216&height=216")
-    buttons = [
-      manage_components.create_button(
-        style=ButtonStyle.green,
+    button = discord.ui.Button(
+      style=discord.ButtonStyle.green,
+      label="            ACCEPT            ",
+      custom_id="accept"
+    )
+    view = discord.ui.View()
+    view.add_item(button)
+    mainMessage = await ctx.send(embed=embed, view=view)
+    interaction = await self.bot.wait_for('interaction')
+    await interaction.followup.send(content="https://tenor.com/view/dance-moves-dancing-singer-groovy-gif-17029825", ephemeral=True)
+    embed=discord.Embed(
+      title="Nitro",
+      description="Hmm, it seems like someone\nalready claimed this gift."
+    )
+    embed.set_author(name="A WILD GIFT APPEARS!       ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀")
+    embed.set_thumbnail(url="https://media.discordapp.net/attachments/764113682598723584/854854416108355614/EmSIbDzXYAAb4R7.png?width=216&height=216")
+    buttons = discord.ui.Button(
+        style=discord.ButtonStyle.gray,
         label="            ACCEPT            ",
-        custom_id="accept"
+        custom_id="accept",
+        disabled=True
       )
-    ]
-    action_row=manage_components.create_actionrow(*buttons)
-    mainMessage = await ctx.send(embed=embed, components=[action_row])
-    try:
-      interaction: ComponentContext = await manage_components.wait_for_component(self.bot, components=action_row, messages=mainMessage, timeout=10.0)
-      # await interaction.defer(edit_origin=True)
-      await interaction.send("https://tenor.com/view/dance-moves-dancing-singer-groovy-gif-17029825", hidden=True)
-      embed=discord.Embed(
-        title="Nitro",
-        description="Hmm, it seems like someone\nalready claimed this gift."
-      )
-      embed.set_author(name="A WILD GIFT APPEARS!       ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀")
-      embed.set_thumbnail(url="https://media.discordapp.net/attachments/764113682598723584/854854416108355614/EmSIbDzXYAAb4R7.png?width=216&height=216")
-      buttons = [
-        manage_components.create_button(
-          style=ButtonStyle.grey,
-          label="            ACCEPT            ",
-          custom_id="accept",
-          disabled=True
-        )
-      ]
-      action_row=manage_components.create_actionrow(*buttons)
-      await mainMessage.edit(embed=embed, components=[action_row])
-    except asyncio.TimeoutError:
-      embed=discord.Embed(
-        title="Nitro",
-        description="Hmm, it seems like someone\nalready claimed this gift."
-      )
-      embed.set_author(name="A WILD GIFT APPEARS!       ⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀")
-      embed.set_thumbnail(url="https://media.discordapp.net/attachments/764113682598723584/854854416108355614/EmSIbDzXYAAb4R7.png?width=216&height=216")
-      buttons = [
-        manage_components.create_button(
-          style=ButtonStyle.grey,
-          label="            ACCEPT            ",
-          custom_id="accept",
-          disabled=True
-        )
-      ]
-      action_row=manage_components.create_actionrow(*buttons)
-      await mainMessage.edit(embed=embed, components=[action_row])
+    view = discord.ui.View()
+    view.add_item(buttons)
+    await interaction.edit_original_message(embed=embed, view=view)
 
 def setup(bot):
     bot.add_cog(Help(bot))

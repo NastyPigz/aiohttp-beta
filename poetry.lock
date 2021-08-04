@@ -97,23 +97,6 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 
 [[package]]
-name = "discord-py-slash-command"
-version = "2.3.2"
-description = "A simple interaction handler for discord.py."
-category = "main"
-optional = false
-python-versions = ">=3.6"
-
-[package.dependencies]
-aiohttp = "*"
-"discord.py" = "*"
-
-[package.extras]
-dev = ["black", "flake8", "isort", "sphinx", "sphinx-rtd-theme"]
-lint = ["black", "flake8", "isort", "sphinx", "sphinx-rtd-theme"]
-readthedocs = ["sphinx", "sphinx-rtd-theme"]
-
-[[package]]
 name = "discord.py"
 version = "1.7.3"
 description = "A Python wrapper for the Discord API"
@@ -210,6 +193,14 @@ optional = false
 python-versions = ">=3.6"
 
 [[package]]
+name = "orjson"
+version = "3.6.0"
+description = "Fast, correct Python JSON library supporting dataclasses, datetimes, and numpy"
+category = "main"
+optional = false
+python-versions = ">=3.6"
+
+[[package]]
 name = "pillow"
 version = "8.3.1"
 description = "Python Imaging Library (Fork)"
@@ -297,6 +288,18 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "wavelink"
+version = "0.9.10"
+description = "A versatile LavaLink wrapper for Discord.py"
+category = "main"
+optional = false
+python-versions = ">=3.7"
+
+[package.dependencies]
+aiohttp = ">=3.6.0,<3.8.0"
+"discord.py" = ">=1.2.5"
+
+[[package]]
 name = "yarl"
 version = "1.6.3"
 description = "Yet another URL library"
@@ -311,7 +314,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "d9ac1ec14cfd49fc81227617d66efe43cb184e7428f50fa9ceab72c315bf3484"
+content-hash = "1ba506aca1b420dc4405eb41cf96e8c10e442da3255a72ccc5a32e15ee209289"
 
 [metadata.files]
 aiohttp = [
@@ -385,10 +388,6 @@ colorama = [
     {file = "colorama-0.4.4-py2.py3-none-any.whl", hash = "sha256:9f47eda37229f68eee03b24b9748937c7dc3868f906e8ba69fbcbdd3bc5dc3e2"},
     {file = "colorama-0.4.4.tar.gz", hash = "sha256:5941b2b48a20143d2267e95b1c2a7603ce057ee39fd88e7329b0c292aa16869b"},
 ]
-discord-py-slash-command = [
-    {file = "discord-py-slash-command-2.3.2.tar.gz", hash = "sha256:ab3e73d683bb0ed098902c33de3c87c8a05c1e5dbe50682752dcc3fc0db4ce6a"},
-    {file = "discord_py_slash_command-2.3.2-py3-none-any.whl", hash = "sha256:3347442b70484b02eba40490f946cdfd58e080c4f698f9e2960f134d28faa41d"},
-]
 "discord.py" = [
     {file = "discord.py-1.7.3-py3-none-any.whl", hash = "sha256:c6f64db136de0e18e090f6752ea68bdd4ab0a61b82dfe7acecefa22d6477bb0c"},
     {file = "discord.py-1.7.3.tar.gz", hash = "sha256:462cd0fe307aef8b29cbfa8dd613e548ae4b2cb581d46da9ac0d46fb6ea19408"},
@@ -452,6 +451,32 @@ multidict = [
     {file = "multidict-5.1.0-cp39-cp39-win32.whl", hash = "sha256:fc13a9524bc18b6fb6e0dbec3533ba0496bbed167c56d0aabefd965584557d80"},
     {file = "multidict-5.1.0-cp39-cp39-win_amd64.whl", hash = "sha256:7df80d07818b385f3129180369079bd6934cf70469f99daaebfac89dca288359"},
     {file = "multidict-5.1.0.tar.gz", hash = "sha256:25b4e5f22d3a37ddf3effc0710ba692cfc792c2b9edfb9c05aefe823256e84d5"},
+]
+orjson = [
+    {file = "orjson-3.6.0-cp310-cp310-manylinux_2_24_aarch64.whl", hash = "sha256:53ef160ac1b27d0417005e865ec1478044db4289b25beadff2ab4ce2c74a0f22"},
+    {file = "orjson-3.6.0-cp310-cp310-manylinux_2_24_x86_64.whl", hash = "sha256:baf8e883b88ada0825a6d5f0c23e356f0f0188d0737664a5767feec82b40576b"},
+    {file = "orjson-3.6.0-cp36-cp36m-macosx_10_7_x86_64.whl", hash = "sha256:d02cc480dfabc941b3ad6af333ea579dc5606646d808e1fed9010d1960c29d65"},
+    {file = "orjson-3.6.0-cp36-cp36m-macosx_10_9_x86_64.macosx_11_0_arm64.macosx_10_9_universal2.whl", hash = "sha256:a58559c684f1b1ead7b2dd6ec95645f1fa5bd98a784b20d0e83a4be95dbc956f"},
+    {file = "orjson-3.6.0-cp36-cp36m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:8becded36abd1363b604b4decae77c54b79086f397b7ceec134627119aac4214"},
+    {file = "orjson-3.6.0-cp36-cp36m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:e06746591c3ed0549bc6860cb537e39cf14009f5fe31a1becc3b3cf2abc5f202"},
+    {file = "orjson-3.6.0-cp36-none-win_amd64.whl", hash = "sha256:922c9d3d7438ee14f103511cc005c1e470dbc01e42b22d8754e6477cebd02959"},
+    {file = "orjson-3.6.0-cp37-cp37m-macosx_10_7_x86_64.whl", hash = "sha256:7eff58fa9e4fdf08034017ae5ec8ff90396502fd9f9d28ee2481dd4c6132a40d"},
+    {file = "orjson-3.6.0-cp37-cp37m-macosx_10_9_x86_64.macosx_11_0_arm64.macosx_10_9_universal2.whl", hash = "sha256:aca079cab25f7d2001af309a661e66473e4610dbb77ccbc245c05669dc03f639"},
+    {file = "orjson-3.6.0-cp37-cp37m-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:63314d2f0602cdb570c548b19f94f7a158bdb8a10359eb707a40d19e577edc81"},
+    {file = "orjson-3.6.0-cp37-cp37m-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:f71c05553a0a3e5d32574bc4edcdd31dfbdcf981ad980988d0488a1e5a368451"},
+    {file = "orjson-3.6.0-cp37-none-win_amd64.whl", hash = "sha256:0d1a4b5b796ad55f2b87e6177e833e972a4da5804765fc45a11be40421768589"},
+    {file = "orjson-3.6.0-cp38-cp38-macosx_10_7_x86_64.whl", hash = "sha256:a83c2aacb3a5bc08ee6289ac5fb07eae7d5232e2c6e492dbf20289ba78475dd2"},
+    {file = "orjson-3.6.0-cp38-cp38-macosx_10_9_x86_64.macosx_11_0_arm64.macosx_10_9_universal2.whl", hash = "sha256:dd3e0e841d699290b28bf452e099c1d77f3571a059ef0e61622bd18cef1b86ad"},
+    {file = "orjson-3.6.0-cp38-cp38-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:e23f46b58f51e14efd18bb570f3fb07cbf2de0c71189bcf4c52f9c212eb54ac7"},
+    {file = "orjson-3.6.0-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:55816d7f553f8d30a4584299a114d15821ee475586f59726e53666e031f24fc9"},
+    {file = "orjson-3.6.0-cp38-none-win_amd64.whl", hash = "sha256:eb226b0fbf5a39d359ac1cc78a3869ff8c24cdb4e766e5b2d50ee89d47042eb1"},
+    {file = "orjson-3.6.0-cp39-cp39-macosx_10_7_x86_64.whl", hash = "sha256:d61334b8a3d0a6f4e70fab887d504d75f89014d731e7a5edc57ef00bbb27b5fc"},
+    {file = "orjson-3.6.0-cp39-cp39-macosx_10_9_x86_64.macosx_11_0_arm64.macosx_10_9_universal2.whl", hash = "sha256:e59ffe5442ce523b785df54b8bcb2aead0779e2d78d4dc3a3d3a8ecfbc6e3afb"},
+    {file = "orjson-3.6.0-cp39-cp39-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:2ffca90b561290d7d3ce87ac91d2da970b590bd01b00617e601e4e420d29a51f"},
+    {file = "orjson-3.6.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:1064ec32586c90e2191d2b917479686cfb0a6be352f2fc4d07ad2481c2186849"},
+    {file = "orjson-3.6.0-cp39-cp39-manylinux_2_24_x86_64.whl", hash = "sha256:6313c294059dbc0dffc629baf1c5144bdc407c9705c9f47e779fa97e65f846c0"},
+    {file = "orjson-3.6.0-cp39-none-win_amd64.whl", hash = "sha256:8538e18d07f12b534a289fcac0ccab443e0b2ade7069fc702ef96375ad44a0cb"},
+    {file = "orjson-3.6.0.tar.gz", hash = "sha256:367bf36a5f9c461c4f8f5f679ac6a36d31fa73aa11bf8ea82d3ceec3121a2abe"},
 ]
 pillow = [
     {file = "Pillow-8.3.1-1-cp36-cp36m-win_amd64.whl", hash = "sha256:fd7eef578f5b2200d066db1b50c4aa66410786201669fb76d5238b007918fb24"},
@@ -617,6 +642,10 @@ typing-extensions = [
     {file = "typing_extensions-3.10.0.0-py2-none-any.whl", hash = "sha256:0ac0f89795dd19de6b97debb0c6af1c70987fd80a2d62d1958f7e56fcc31b497"},
     {file = "typing_extensions-3.10.0.0-py3-none-any.whl", hash = "sha256:779383f6086d90c99ae41cf0ff39aac8a7937a9283ce0a414e5dd782f4c94a84"},
     {file = "typing_extensions-3.10.0.0.tar.gz", hash = "sha256:50b6f157849174217d0656f99dc82fe932884fb250826c18350e159ec6cdf342"},
+]
+wavelink = [
+    {file = "wavelink-0.9.10-py3-none-any.whl", hash = "sha256:6403b79762c200e6e82753fe65ca2f1663408c570b6a0815d8a9504e370b0866"},
+    {file = "wavelink-0.9.10.tar.gz", hash = "sha256:a5a0ebcc52dda02f43b42ede435ca091c88881c2f4d0929c41a60d409adb001a"},
 ]
 yarl = [
     {file = "yarl-1.6.3-cp36-cp36m-macosx_10_14_x86_64.whl", hash = "sha256:0355a701b3998dcd832d0dc47cc5dedf3874f966ac7f870e0f3a6788d802d434"},

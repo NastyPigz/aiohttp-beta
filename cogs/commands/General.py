@@ -1,26 +1,55 @@
-import discord, requests, os, aiohttp, time, qrcode, image
+import discord, requests, os, aiohttp, time, qrcode, image, typing
 from discord.ext import commands, tasks
 from discord.ext.commands import has_permissions
 from data.profanity import swearwords
 from cogs.moderator.admin import Admin
 import random, asyncio, smtplib, re, datetime, asyncio, os, sys
-from discord_slash.utils import manage_components
-from discord_slash.model import ButtonStyle
+# from discord_slash.utils import manage_components
+# from discord_slash.model import ButtonStyle
 from data.json.help import help_menu
-from discord_slash.utils.manage_components import create_select, create_select_option
-from discord_slash.utils.manage_components import wait_for_component
-from discord_slash.context import ComponentContext
+# from discord_slash.utils.manage_components import create_select, create_select_option
+# from discord_slash.utils.manage_components import wait_for_component
+# from discord_slash.context import ComponentContext
 from data.json.jobs import jobs
 from other.mongo import cluster
 import concurrent, io
 import functools
 from pathlib import Path
 
+class ChoiceView(discord.ui.View):
+  def __init__(self, *, timeout):
+    super().__init__(timeout=timeout)
+  
+  async def on_timeout(self):
+    pass
+
+class SelectChoiceView(discord.ui.Select):
+  def __init__(self, *, options, right, jobs, db):
+    super().__init__(options=options, min_values=1, max_values=1, row=0)
+    self.right_answers = right
+    self.job = jobs
+    self.db=db
+
+  async def callback(self, interaction: discord.Interaction):
+    options = self.values
+    content=""
+    for i in options:
+      content+=f"{i}"
+    is_right = True if str(content) in self.right_answers else False
+    salary = jobs[self.job]["salary"] if is_right else jobs[self.job]["fail"]
+    try:
+      number_of_degrees = len(self.db[str(interaction.user.id)]["degree"])
+    except:
+      number_of_degrees = 0
+    if number_of_degrees > 0:
+      salary = int(salary*(number_of_degrees*0.2+1))
+    await interaction.response.send_message(content=f"Selected options: {content}, right={is_right}, Salary = {salary}")
+
+
 class General(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
     self.usage = bot.usage
-    self.data = bot.data
     self.maindb = bot.maindb
     self.logsdb = bot.logsdb
     self.usersdb = bot.usersdb
@@ -191,28 +220,15 @@ class General(commands.Cog):
         questions_clone.pop(questions_clone.index(stuff))
       options = []
       for i in questions:
-        options.append(create_select_option(label=questions[questions.index(i)], value=questions[questions.index(i)]))
-      select = create_select(options=options, min_values=1, max_values=1)
-      action_row=manage_components.create_actionrow(select)
-      messageMain = await ctx.send(content=the_q["question"], components=[action_row])
+        options.append(discord.SelectOption(label=questions[questions.index(i)], value=questions[questions.index(i)]))
+      select = SelectChoiceView(options=options, right=right_answers, jobs=job, db=self.maindb)
+      view=ChoiceView(timeout=30.0)
+      view.add_item(select)
+      messageMain = await ctx.send(content=the_q["question"], view=view)
       while True:
-        try:
-          select_ctx: ComponentContext = await wait_for_component(self.bot, components=action_row, timeout=30.0)
-          options = select_ctx.selected_options
-          content = ""
-          for i in options:
-            content+=f"{i}"
-          is_right = True if str(content) in right_answers else False
-          salary = jobs[job]["salary"] if is_right else jobs[job]["fail"]
-          try:
-            number_of_degrees = len(self.maindb[str(ctx.author.id)]["degree"])
-          except:
-            number_of_degrees=0
-          if number_of_degrees > 0:
-            salary=int(salary*(number_of_degrees*0.2+1))
-          await select_ctx.send(f"Selected options: {content}, right={True if str(content) in right_answers else False}, Salary = {salary}")
-        except asyncio.TimeoutError:
-          await messageMain.edit(content="Choice test timeout", components=[])
+        await view.wait()
+        await messageMain.edit(content="Choice test timeout", view=None)
+        break
     except Exception as e:
       print(e)
   
@@ -335,30 +351,28 @@ class General(commands.Cog):
         embed.set_author(name="CapitalismBot", url="https://discord.capitalismbot.repl.co/dashboard", icon_url="https://i.redd.it/ay9oenzf2vb21.png")
         embed.set_thumbnail(url="https://www.pngkey.com/png/detail/395-3958678_where-the-a-is-a-common-symbol-for.png")
         embed.set_footer(text="Capitalism Discord Bot", icon_url="https://i.dlpng.com/static/png/6312530-what-capitalism-symbol-the-of-is-symbol-symbol-capitalism-capitalism-symbol-820_703_preview.png")
-        buttons = [
-              manage_components.create_button(
-                  style=ButtonStyle.URL,
-                  label="Invite me",
-                  url="https://discord.com/oauth2/authorize?client_id=823699570147065876&permissions=268823670&redirect_uri=https%3A%2F%2Fdiscord.com%2Foauth2%2Fauthorize%3Fclient_id%3DCapitalismBot&scope=bot%20applications.commands"
-              ),
-              manage_components.create_button(
-                  style=ButtonStyle.URL,
-                  label="Support Server",
-                  url="https://discord.gg/capitalism"
-              ),
-          ]
-        action_row = manage_components.create_actionrow(*buttons)
+        view = discord.ui.View()
+        view.add_item(
+          discord.ui.Button(
+            style=discord.ButtonStyle.URL,
+            label="Invite me",
+            url="https://discord.com/oauth2/authorize?client_id=823699570147065876&permissions=268823670&redirect_uri=https%3A%2F%2Fdiscord.com%2Foauth2%2Fauthorize%3Fclient_id%3DCapitalismBot&scope=bot%20applications.commands"
+          )
+        )
+        view.add_item(
+          discord.ui.Button(
+            style=discord.ButtonStyle.URL,
+            label="Support Server",
+            url="https://discord.gg/capitalism"
+          )
+        )
         try:
           await ctx.author.send(embed=embed,
-            components=[
-              action_row
-            ]
+            view=view
           )
         except:
           await ctx.message.reply(embed=embed,
-            components=[
-              action_row
-            ],
+            view=view,
             mention_author=False
           )
       user = ctx.author
@@ -477,11 +491,9 @@ class General(commands.Cog):
 
   @commands.Cog.listener()
   async def on_message(self, message):
-    try:
-      channel = await self.bot.fetch_channel(message.channel.id)
-      if isinstance(channel, discord.channel.DMChannel):
-        return
-    except:
+    if not message.author.bot:
+      await message.author.create_dm()
+    if message.guild is None:
       return
     if message.author == self.bot.user:
       if not str(message.guild.id) in self.logsdb.keys():

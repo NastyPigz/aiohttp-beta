@@ -8,8 +8,6 @@ from data.json.badge import badge_items
 from data.json.shop import shop_items
 from data.json.jobs import jobs
 import datetime
-from discord_slash.utils import manage_components
-from discord_slash.model import ButtonStyle
 from typing import Optional, Union
 from handler import CapitalismConverter
 
@@ -1517,23 +1515,23 @@ class Currency(commands.Cog):
           name="Top.gg",
           value = "https://top.gg/bot/823699570147065876/vote\n **The Reward: Coin_Bag x1**\n\nVoting Top.gg on weekends for DOUBLE REWARDS!"
       )
-      buttons=[
-        manage_components.create_button(
-          style=ButtonStyle.URL,
+      view = discord.ui.View()
+      view.add_item(
+        discord.ui.Button(
+          style=discord.ButtonStyle.link,
           label="DiscordBotList",
-          url="https://discordbotlist.com/bots/capitalism/upvote",
-        ),
-        manage_components.create_button(
-          style=ButtonStyle.URL,
+          url="https://discordbotlist.com/bots/capitalism/upvote"
+        )
+      )
+      view.add_item(
+        discord.ui.Button(
+          style=discord.ButtonStyle.link,
           label="Top.gg",
-          url="https://top.gg/bot/823699570147065876/vote",
-        ),
-      ]
-      action_row = manage_components.create_actionrow(*buttons)
+          url="https://top.gg/bot/823699570147065876/vote"
+        )
+      )
       await ctx.send(embed=em, 
-      components = [
-      action_row
-      ])
+      view=view)
   
   @discord.ext.commands.cooldown(1,5, commands.BucketType.user)
   @commands.command()
