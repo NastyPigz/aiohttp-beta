@@ -1,6 +1,6 @@
 from discord.ext import commands
 from other.mongo import cluster
-import discord, asyncio, os, sys
+import discord, asyncio, os, sys, subprocess
 
 class Admin(commands.Cog):
   def __init__(self, bot):
@@ -104,6 +104,7 @@ class Admin(commands.Cog):
       await ctx.send("rebooting the bot...")
       with open("afk/communicate.txt", "w") as f:
         f.write("exit")
+      subprocess.run("clear", shell=True)
       os.execv(sys.executable, ['python'] + sys.argv)
     else:
       await ctx.send("You cannot reboot the bot.")

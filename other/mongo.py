@@ -173,6 +173,7 @@ async def func_bitcoin(self):
   """
   bitcoin exchange rate function
   """
+  print("Bitcoin Functioning...")
   while True:
       users = self.bot.bitcoin
       exchange_rate = users["exchange_rate"]

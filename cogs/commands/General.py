@@ -1138,7 +1138,7 @@ class General(commands.Cog):
           return
         print(e)
         return
-    await webh.send(content=words, username=user.name, avatar_url=user.avatar_url, allowed_mentions=discord.AllowedMentions(roles=False, users=False, everyone=False))
+    await webh.send(content=words, username=user.name, avatar_url=user.avatar.url, allowed_mentions=discord.AllowedMentions(roles=False, users=False, everyone=False))
 
   # @commands.bot_has_permissions(manage_webhooks=True)
   @commands.command()
@@ -1168,7 +1168,7 @@ class General(commands.Cog):
         webh = await ctx.channel.create_webhook(name="NQN")
       except:
         await ctx.send("I need `manage_webhook` permissions.")
-    await webh.send(content=emoji, username=ctx.author.name, avatar_url=ctx.author.avatar_url)
+    await webh.send(content=emoji, username=ctx.author.name, avatar_url=ctx.author.avatar.url)
 
 def setup(bot):
     bot.add_cog(General(bot))

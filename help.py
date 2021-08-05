@@ -11,7 +11,7 @@ admins = [
 ]
 
 class HelpBase(discord.ui.View):
-  def __init__(self, *, timeout=30.0, message):
+  def __init__(self, *, timeout=1000000.0, message):
     super().__init__(timeout=timeout)
     self.mainMessage = message
 
@@ -19,6 +19,20 @@ class HelpBase(discord.ui.View):
     await self.mainMessage.edit(
       view=ClosedPaginator()
     )
+
+class SelectBase(discord.ui.View):
+  def __init__(self, *, timeout=30.0, message):
+    super().__init__(timeout=timeout)
+    self.mainMessage = message
+
+  async def on_timeout(self):
+    await self.mainMessage.edit(
+      view=ClosedSelect()
+    )
+
+class ClosedSelect(discord.ui.Select):
+  def __init__(self):
+    super().__init__(disabled=True)
 
 class HelpMenuSelect(discord.ui.Select):
   def __init__(self, embeds, **kwargs):
@@ -36,7 +50,7 @@ class HelpMenuSelect(discord.ui.Select):
           embed = embed
           break
     select = HelpMenuSelect(self.embeds, **self.things)
-    view = discord.ui.View()
+    view = SelectBase(message=interaction.message)
     view.add_item(select)
     await interaction.response.edit_message(
       embed=embed,
@@ -77,9 +91,11 @@ class BackButton(discord.ui.Button):
         current = 0
       elif current < 0:
         current = len(self.thing.embeds) - 1
+      view = self.thing.selector(message=interaction.message)
+      view.add_item(self.thing.select)
       await interaction.response.send_message(
         embed = self.thing.embeds[current],
-        view=self.thing.selector,
+        view=view,
         ephemeral=True
       )
     else:
@@ -129,9 +145,11 @@ class FrontButton(discord.ui.Button):
         current = 0
       elif current < 0:
         current = len(self.thing.embeds) -1
+      view = self.thing.selector(message=interaction.message)
+      view.add_item(self.thing.select)
       await interaction.response.send_message(
         embed = self.thing.embeds[current],
-        view=self.thing.selector,
+        view=view,
         ephemeral=True
       )
     else:
@@ -170,9 +188,10 @@ class FrontButton(discord.ui.Button):
       )
 
 class Paginator(discord.ui.View):
-  def __init__(self, *, embeds:typing.List[discord.Embed], timeout: typing.Union[float], user:typing.Union[discord.Member], selector: typing.Union[discord.ui.View]):
+  def __init__(self, *, embeds:typing.List[discord.Embed], timeout: typing.Union[float], user:typing.Union[discord.Member], selector: typing.Union[discord.ui.View], select):
     super().__init__(timeout=timeout)
     self.selector=selector
+    self.select = select
     self.embeds=embeds
     self.current = 0
     self.user=user
@@ -211,9 +230,11 @@ class Paginator(discord.ui.View):
         current = 0
       elif current < 0:
         current = len(self.embeds) - 1
+      view = self.selector(message=interaction.message)
+      view.add_item(self.select)
       await interaction.response.send_message(
         embed = self.embeds[current],
-        view=self.selector,
+        view=view,
         ephemeral=True
       )
     else:
@@ -274,9 +295,11 @@ class Paginator(discord.ui.View):
         current = 0
       elif current < 0:
         current = len(self.embeds) - 1
+      view = self.selector(message=interaction.message)
+      view.add_item(self.select)
       await interaction.response.send_message(
         embed = self.embeds[current],
-        view=self.selector,
+        view=view,
         ephemeral=True
       )
     else:
@@ -339,6 +362,7 @@ class CustomHelp(commands.HelpCommand):
     for key in d.keys():
       try:
         if not self.context.author.id in admins:
+          reaction_=False
           if d[key].hidden:
             continue
         elif continue_:
@@ -347,15 +371,20 @@ class CustomHelp(commands.HelpCommand):
         elif continue_ == False:
           pass
         else:
-          def check(m):
-            return m.author == self.context.author and m.channel == self.context.channel
-          await self.context.send("say r or n")
-          msg = await self.context.bot.wait_for('message', check=check)
-          if not msg.content.lower() == "r":
+          def check(r, u):
+            return u == self.context.author and r.message.channel == self.context.channel and r.message == self.context.message
+          await self.context.message.add_reaction("🇷")
+          await self.context.message.add_reaction("🇳")
+          reaction, user = await self.context.bot.wait_for('reaction_add', check=check)
+          if not str(reaction) == "🇷":
+            reaction_ = False
             continue_ = True
+            await reaction.message.clear_reactions()
             continue
           else:
             continue_ = False
+            reaction_ = True
+            await reaction.message.clear_reactions()
             pass
       except:
         continue
@@ -372,23 +401,29 @@ class CustomHelp(commands.HelpCommand):
       )
       paginationList.append(await self.get_cog_help(d[key]))
     paginationList[0]=embed
-    view = discord.ui.View()
-    item = HelpMenuSelect(paginationList, options=options, min_values=1, max_values=1, row=0)
-    view.add_item(item)
-    view = Paginator(embeds=paginationList, timeout=30.0, user=self.context.author, selector=view)
+    view = Paginator(embeds=paginationList, timeout=30.0, user=self.context.author, selector=SelectBase, select= HelpMenuSelect(paginationList, options=options, min_values=1, max_values=1, row=0))
     mainMessage = await self.context.reply(
       embed = embed,
       view=view,
       mention_author=False
     )
     async def help_task(view, mainMessage, CP):
-      while True:
-        await view.wait()
+      await view.wait()
+      try:
         await mainMessage.edit(
           view=CP()
         )
-        break
+      except:
+        return True
       return True
+    async def reaction_task():
+      def check(r, u):
+        return u == self.context.author and r.message.channel == self.context.channel and r.message == mainMessage
+      await mainMessage.add_reaction(":capbin:872920519815594015")
+      reaction, user = await self.context.bot.wait_for('reaction_add', check=check)
+      await reaction.message.delete()
+    if reaction_:
+      await self.context.bot.loop.create_task(reaction_task())
     await self.context.bot.loop.create_task(help_task(view, mainMessage, ClosedPaginator))
 
   async def get_cog_help(self, cog):

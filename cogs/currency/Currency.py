@@ -10,6 +10,7 @@ from data.json.jobs import jobs
 import datetime
 from typing import Optional, Union
 from handler import CapitalismConverter
+from custom_methods import pint
 
 class Currency(commands.Cog):
   def __init__(self, bot):
@@ -87,7 +88,7 @@ class Currency(commands.Cog):
       )
       em.add_field(
         name="BTC amount",
-        value=f'You have {users["bitcoin"]} bitcoins, stonks!'
+        value=f'You have {pint(users["bitcoin"])} bitcoins, stonks!'
       )
       em.set_footer(
         text=f"{ctx.prefix}btc view | {ctx.prefix}btc buy 1 | {ctx.prefix}btc sell 1 | More commands coming soon..."
@@ -96,7 +97,7 @@ class Currency(commands.Cog):
     elif message.lower() == "view":
       em=discord.Embed(
         title="Bitcoin Exchange rate",
-        description=f"**${exchange_rate:,} --- 1 BTC**"
+        description=f"**${pint(exchange_rate)} --- 1 BTC**"
       )
       await ctx.send(embed=em)
     elif message.lower() == "buy":
@@ -131,7 +132,7 @@ class Currency(commands.Cog):
         users["bitcoin"]-=amount
         embed=discord.Embed(
           title="Transcation Successful",
-          description=f"Sold {amount} bitcoins for {exchange_rate*amount}"
+          description=f"Sold {pint(amount)} bitcoins for {pint(exchange_rate*amount)}"
         )
         await ctx.send(embed=embed)
       else:
@@ -164,7 +165,7 @@ class Currency(commands.Cog):
         )
         em.add_field(
           name="BTC amount",
-          value=users[str(user.id)]["bitcoin"]
+          value=pint(users[str(user.id)]["bitcoin"])
         )
         await ctx.send(embed=em)
       except:
@@ -310,7 +311,7 @@ class Currency(commands.Cog):
     if random.randint(1,100) > 39:
       embed=discord.Embed(
         title=f"{who} felt bad for you!",
-        description=f"You received {earnings}"
+        description=f"You received {pint(earnings)}"
       )
       embed.set_footer(text="nice")
       await ctx.send(embed=embed)
@@ -333,7 +334,7 @@ class Currency(commands.Cog):
         ad_price = users[str(member.id)]["ads"]
         embed = discord.Embed(
           title=f"{member}'s Advertisement Data",
-          description = f"Advertisement Price: {ad_price}"
+          description = f"Advertisement Price: {pint(ad_price)}"
         )
         await ctx.send(embed=embed)
         return
@@ -346,7 +347,7 @@ class Currency(commands.Cog):
     ad_price = users[str(ctx.author.id)]["ads"]
     embed = discord.Embed(
       title=f"{ctx.author}'s Advertisement Data",
-      description = f"Advertisement Price: {ad_price}"
+      description = f"Advertisement Price: {pint(ad_price)}"
     )
     await ctx.send(embed=embed)
   
@@ -380,7 +381,7 @@ class Currency(commands.Cog):
       users[str(ctx.author.id)]["ads"]+= int(users[str(member.id)]["ads"]/10)
       embed=discord.Embed(
         title="Transcation Successful!",
-        description=f"You bought {member}'s ads for {ad_price}, and your advertisement price grew by {growth}"
+        description=f"You bought {member}'s ads for {pint(ad_price)}, and your advertisement price grew by {pint(growth)}"
       )
       await ctx.send(embed=embed)
     else:
@@ -413,7 +414,7 @@ class Currency(commands.Cog):
         pass
       embed=discord.Embed(
         title=f"{who} blessed you SO MUCH that you found TREASURE!",
-        description=f"You sold all the jewels and got {treasure}"
+        description=f"You sold all the jewels and got {pint(treasure)}"
       )
       await ctx.send(embed=embed)
       users[str(user.id)]["wallet"]+=treasure
@@ -462,7 +463,7 @@ class Currency(commands.Cog):
           users[str(other.id)]["wallet"]+=round(share_amt*0.85)
           embed=discord.Embed(
             title="Transcation Successful!",
-            description=f"You gave {member} {round(share_amt*0.85)} CTC after a 15% tax rate."
+            description=f"You gave {member} {pint(round(share_amt*0.85))} CTC after a 15% tax rate."
           )
           embed.set_footer(text="You lost: {:,}".format(share_amt))
           await ctx.send(embed=embed)
@@ -471,7 +472,7 @@ class Currency(commands.Cog):
           users[str(other.id)]["wallet"]+=share_amt
           embed=discord.Embed(
             title="Transcation Successful!",
-            description=f"You gave {member} {share_amt} CTC. You're pog so you get NO TAX."
+            description=f"You gave {member} {pint(share_amt)} CTC. You're pog so you get NO TAX."
           )
           embed.set_footer(text="You lost: {:,}".format(share_amt))
           await ctx.send(embed=embed)
@@ -682,7 +683,7 @@ class Currency(commands.Cog):
       users = self.maindb
       other=member
       users[str(other.id)]["wallet"]-=int(message)
-      await ctx.send(f"You removed {member} {message} CTC.")
+      await ctx.send(f"You removed {member} {pint(message)} CTC.")
     else:
       await ctx.send("This command is creator only.")
   

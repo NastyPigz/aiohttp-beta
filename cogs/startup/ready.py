@@ -3,18 +3,19 @@ from discord.ext import commands
 from other.mongo import cluster, func_bitcoin
 from data.json.shop import shop_items
 from data.json.badge import badge_items
-import asyncio
+import asyncio, subprocess
 
 class StartUp(commands.Cog):
   def __init__(self, bot):
     self.bot = bot
     self.loop = asyncio.get_event_loop()
     self.hidden=True
-  
+
   @commands.Cog.listener()
   async def on_ready(self):
     self.bot.loadng=True
     self.bot.remove_command("jsk")
+    subprocess.run("clear")
     db = self.bot.maindb
     for id, document in db.items():
       if "_id" not in document:
@@ -59,7 +60,13 @@ class StartUp(commands.Cog):
         def run():
           subprocess.run("python afk/afk.py", shell=True)
         await self.bot.loop.run_in_executor(pool, run)
-    await self.bot.loop.create_task(task1())
+    async def task2():
+      with concurrent.futures.ThreadPoolExecutor() as pool:
+        def run():
+          subprocess.run("python 1.7.3/slash.py", shell=True)
+        await self.bot.loop.run_in_executor(pool, run)
+    self.bot.loop.create_task(task1())
+    self.bot.loop.create_task(task2())
     await func_bitcoin(self)
 
 def setup(bot):

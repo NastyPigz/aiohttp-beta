@@ -3,9 +3,9 @@
     "cogs/currency/data.json": [
       {
         "id": "7dd164a6-0652-4914-bf75-22aafc57eb75",
-        "line": 3,
-        "version": 111,
-        "index": 107
+        "line": 1,
+        "version": 4,
+        "index": 0
       }
     ],
     "discord.py/setup.py": [

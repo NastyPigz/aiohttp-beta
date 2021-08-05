@@ -1,7 +1,9 @@
 import discord, os, sys, io
 from discord.ext import commands, tasks
-import asyncio, json, re
+import asyncio, re
 from discord.http import Route
+
+json = __import__("json")
 
 def setup(bot):
   bot.add_cog(SocialMedia(bot))

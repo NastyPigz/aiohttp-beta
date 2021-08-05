@@ -1,19 +1,16 @@
 [tool.poetry]
-name = "repl_python3_beta_aiohttp-beta"
+name = "repl_python3_beta_get-cocaine"
 version = "0.1.0"
 description = ""
 authors = ["NastyPigz <<>>"]
 
 [tool.poetry.dependencies]
 python = "^3.8"
-jishaku = "^2.2.0"
 pymongo = "^3.12.0"
 python-dotenv = "^0.19.0"
 aiohttp = "^3.7.4"
-image = "^1.5.33"
-qrcode = "^7.2"
-orjson = "^3.6.0"
-wavelink = "^0.9.10"
+discord = "^1.7.3"
+jishaku = "^2.2.0"
 
 [tool.poetry.dev-dependencies]
 

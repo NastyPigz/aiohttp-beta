@@ -1,5 +1,5 @@
 from discord.ext import commands, tasks
-import aiohttp, os, discord, asyncio, json
+import aiohttp, os, discord, asyncio
 from discord.http import Route
 
 def setup(bot:commands.Bot):

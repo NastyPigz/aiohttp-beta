@@ -80,14 +80,14 @@ class ErrorHandler(commands.Cog):
         return
       elif isinstance(error, commands.BotMissingPermissions):
         content_string=""
-        for i in error.missing_perms:
+        for i in error.missing_permissions:
           content_string+="`{}`, ".format(i)
         await ctx.send("I am missing permissions!\n{}".format(content_string.rstrip(", ")))
         ctx.command.reset_cooldown(ctx)
         return
       elif isinstance(error, commands.MissingPermissions):
         content_string=""
-        for i in error.missing_perms:
+        for i in error.missing_permissions:
           content_string+="`{}`, ".format(i)
         await ctx.send("You are missing required permissions!\n{}".format(content_string.rstrip(", ")))
         ctx.command.reset_cooldown(ctx)
