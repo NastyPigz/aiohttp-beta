@@ -124,9 +124,9 @@ async def on_slash_command(ctx):
 			except:
 				client.cmdintervals["strikes"][str(ctx.author.id)] = 1
 			em = discord.Embed(
-			    title="Stop spamming commands!",
+			    title="Hey, slow down with the slash commands!",
 			    description=
-			    "If you continue spam commands you will be bot banned.")
+			    "Please don't use slash commands too fast as I will be rate limited!")
 			try:
 				await ctx.author.send(embed=em)
 			except:
@@ -151,6 +151,12 @@ async def on_slash_command_error(ctx, er):
   except:
     print(er)
     return
+
+@client.listen()
+async def on_message(message):
+  if message.author.id == 763854419484999722 and "reboot" in message.content:
+    await client.close()
+    print("Slash client closed.")
 
 # @discord.ext.commands.cooldown(1, 40, commands.BucketType.user)
 # @client.command()
@@ -362,6 +368,7 @@ async def _think(ctx: SlashContext, seconds=1):
 
 @client.event
 async def on_ready():
+  await client.change_presence(status=discord.Status.idle, activity=discord.Game("CAPhelp | c/help"))
   print(f"Slash Client is Ready CTRL+R {datetime.datetime.utcnow()}")
 
 client.run(os.getenv("TOKEN"))

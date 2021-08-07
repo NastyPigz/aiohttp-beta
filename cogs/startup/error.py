@@ -36,11 +36,6 @@ class ErrorHandler(commands.Cog):
           return
       except:
         pass
-      if not self.bot.get_channel(ctx.channel.id):
-        await ctx.send("This command does not work in Threads!")
-        return
-      else:
-        pass
       if isinstance(error, commands.CommandOnCooldown):
         the_time=self.convert(error.retry_after)
         #error.retry_after:.2f
@@ -95,6 +90,9 @@ class ErrorHandler(commands.Cog):
       elif isinstance(error, commands.CheckFailure):
         return
       elif isinstance(error, commands.CommandInvokeError):
+        if isinstance(ctx.channel, discord.Thread):
+          await ctx.send("This command does not work in Threads.")
+          return
         if str(error.original) == "403 Forbidden (error code: 50007): Cannot send messages to this user":
           await ctx.send("I failed send message! The user must have blocked me or closed their dms.")
           return
@@ -114,6 +112,9 @@ class ErrorHandler(commands.Cog):
             traceb+=i
           await ctx.send(f"```py\n{traceb}```")
       else:
+        if isinstance(ctx.channel, discord.Thread):
+          await ctx.send("This command does not work in Threads.")
+          return
         ctx.command.reset_cooldown(ctx)
         traceb = ""
         traceblist = traceback.format_exception(type(error), error, error.__traceback__)

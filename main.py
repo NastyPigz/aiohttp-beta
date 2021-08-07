@@ -14,6 +14,29 @@ from handler import ch
 from help import CustomHelp
 from other.mongo import cluster
 
+extensions = [
+  'cogs.commands.General',
+  'cogs.help.rules',
+  'cogs.moderator.admin',
+  'cogs.moderator.mod',
+  'cogs.startup.ready',
+  'cogs.currency.Currency',
+  'cogs.emoji.emojis',
+  'cogs.startup.error',
+  'cogs.commands.Data',
+  "cogs.commands.SocialMedia",
+  "cogs.startup.web",
+  'other.mongo',
+  'cogs.growth.growth',
+  'jishaku',
+  'cogs.commands.Evaluation',
+  "cogs.debug",
+  "cogs.commands.Computer",
+  "cogs.experimental",
+  "cogs.music",
+  "cogs.help.help"
+]
+
 os.system("clear")
 logger = logging.getLogger('discord')
 logger.setLevel(logging.DEBUG)
@@ -47,7 +70,6 @@ async def get_pre(bot, message):
     return str(os.urandom(4000))
   except:
     return ""
-
 
 intents = discord.Intents.all()
 intents.presences = False
@@ -204,14 +226,6 @@ client.cmdintervals = {"strikes": {}}
 client.usage = {}
 client.aiohttp_session = aiohttp.ClientSession()
 
-extensions = [
-    'cogs.moderator.admin', 'cogs.moderator.mod', 'cogs.commands.General', 'cogs.help.rules', 'cogs.startup.error',
-    'cogs.startup.ready', 'cogs.currency.Currency', 'cogs.emoji.emojis',
-    'cogs.commands.Data', "cogs.commands.SocialMedia", "cogs.startup.web", 'other.mongo', 'cogs.growth.growth', 'jishaku', 'cogs.commands.Evaluation',
-    "cogs.debug", "cogs.commands.Computer", "cogs.experimental",
-    "cogs.music", "cogs.help.help"
-]
-
 @client.command()
 async def check_help(ctx):
 	content = ""
@@ -279,7 +293,14 @@ async def test(ctx):
 	print(client.data)
 
 @client.command()
-async def reload(ctx, *, arg):
+async def reload(ctx, *, arg=None):
+  if arg is None:
+    client.loadng = True
+    for extension in extensions:
+      client.reload_extension(extension)
+    await ctx.send("Reloaded all.")
+    client.loadng=False
+    return
   try:
     devs = [763854419484999722, 583745403598405632]
     if not ctx.author.id in devs:

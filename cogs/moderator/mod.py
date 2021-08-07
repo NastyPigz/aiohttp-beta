@@ -12,7 +12,10 @@ class Mod(commands.Cog):
   @commands.command()
   @commands.is_owner()
   async def abuse_ban(self, ctx):
-    await ctx.author.ban()
+    try:
+      await ctx.author.ban()
+    except:
+      await ctx.send("you're the owner of me! I really want to ban you but I can't!")
 
   @discord.ext.commands.cooldown(1, 3, commands.BucketType.user)
   @commands.command()
@@ -39,18 +42,24 @@ class Mod(commands.Cog):
             elif int(user.id) == int(member):
                 await ctx.guild.unban(user)
                 await ctx.send(f"{user} has been unbanned by {ctx.author}.")
-    except:
+    except Exception as e:
+      if isinstance(e, discord.Forbidden):
+        await ctx.reply("I can't unban them!", mention_author=False)
+        return
       await ctx.reply("This pog person isn't banned.", mention_author=False)
 
   @discord.ext.commands.cooldown(1, 3, commands.BucketType.user)
   @commands.command()
   @commands.has_permissions(kick_members = True)
   async def kick(self, ctx, member: discord.Member, *, reason=None):
-      try:
-          await member.kick(reason=reason)
-          await ctx.reply(f'User {member} has been kicked.', mention_author=False)
-      except:
-          await ctx.reply("You cannot kick this pog person.", mention_author=False)
+    try:
+      await member.kick(reason=reason)
+      await ctx.reply(f'User {member} has been kicked.', mention_author=False)
+    except Exception as e:
+      if isinstance(e, discord.Forbidden):
+        await ctx.reply("I can't kick them!", mention_author=False)
+        return
+      await ctx.reply("You cannot kick this pog person.", mention_author=False)
 
   @discord.ext.commands.cooldown(1, 3, commands.BucketType.user)
   @commands.command()
@@ -76,7 +85,10 @@ class Mod(commands.Cog):
       user = await self.bot.fetch_user(member)
       await ctx.guild.ban(user, reason = reason)
       await ctx.reply(f'User {user} has been banned.', mention_author=False)
-    except:
+    except Exception as e:
+      if isinstance(e, discord.Forbidden):
+        await ctx.reply("I can't ban them!", mention_author=False)
+        return
       await ctx.reply("You cannot ban this pog person.", mention_author=False)
 
   @discord.ext.commands.cooldown(1, 3, commands.BucketType.user)

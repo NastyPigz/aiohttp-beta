@@ -72,7 +72,7 @@ class General(commands.Cog):
     img.save(f"cogs/commands/{path_name}.png")
     return path_name
 
-  # @commands.bot_has_permissions(attach_files=True)
+  @commands.bot_has_permissions(attach_files=True)
   @commands.command(name="qr", aliases=["qrcode"])
   async def qrcode(self, ctx, arg):
     loop = asyncio.get_running_loop()
@@ -96,7 +96,7 @@ class General(commands.Cog):
     except Exception as e:
       print(e)
 
-  # @commands.bot_has_permissions(attach_files=True)
+  @commands.bot_has_permissions(attach_files=True)
   @commands.command()
   async def cat(self, ctx, code:int):
     response = await self.session.get(f"https://http.cat/{code}.jpg")
@@ -105,7 +105,7 @@ class General(commands.Cog):
     await ctx.send(file=discord.File(fp=bytes_, filename=f"http{code}.jpg"))
 
 
-  # @commands.bot_has_permissions(attach_files=True)
+  @commands.bot_has_permissions(attach_files=True)
   @commands.command()
   async def screenshot(self, ctx, url):
     if not ctx.channel.nsfw:
@@ -183,7 +183,7 @@ class General(commands.Cog):
     timestamp = int(dt.timestamp())
     await ctx.send(f"<t:{timestamp}>")
 
-  # @commands.bot_has_permissions(embed_links=True)
+  @commands.bot_has_permissions(embed_links=True)
   @commands.command()
   async def insult(self, ctx, member:discord.Member):
     with open ("cogs/commands/insults.txt", "r") as f:
@@ -491,8 +491,6 @@ class General(commands.Cog):
 
   @commands.Cog.listener()
   async def on_message(self, message):
-    if not message.author.bot:
-      await message.author.create_dm()
     if message.guild is None:
       return
     if message.author == self.bot.user:
@@ -503,6 +501,9 @@ class General(commands.Cog):
         self.logsdb[str(message.guild.id)]["lm"]=int(message.created_at.timestamp())
       return
     if f"<@{self.bot.user.id}>" in message.content or f"<@!{self.bot.user.id}>" in message.content:
+      context = await self.bot.get_context(message)
+      if context.valid:
+        return
       users = self.botbanned
       if str(message.author.id) in users.keys():
         if users[str(message.author.id)]["spam_banned"] or users[str(message.author.id)]["bot_banned"]:
@@ -1117,7 +1118,7 @@ class General(commands.Cog):
           autho=False
           break
   
-  # @commands.bot_has_permissions(manage_webhooks=True)
+  @commands.bot_has_permissions(manage_webhooks=True)
   @commands.command(aliases=["imp"])
   async def impersonate(self, ctx, user:discord.User, *, words):
     webhooks = await ctx.guild.webhooks()
@@ -1136,11 +1137,12 @@ class General(commands.Cog):
         if isinstance(e, discord.HTTPException):
           await ctx.send("Well... this is awkward. But the webhook limit reached for this channel!")
           return
-        print(e)
+        if isinstance(ctx.channel, discord.Thread):
+          raise Exception
         return
     await webh.send(content=words, username=user.name, avatar_url=user.avatar.url, allowed_mentions=discord.AllowedMentions(roles=False, users=False, everyone=False))
 
-  # @commands.bot_has_permissions(manage_webhooks=True)
+  @commands.bot_has_permissions(manage_webhooks=True)
   @commands.command()
   async def nqn(self, ctx, emoji):
     try:
@@ -1167,7 +1169,10 @@ class General(commands.Cog):
       try:
         webh = await ctx.channel.create_webhook(name="NQN")
       except:
+        if isinstance(ctx.channel, discord.Thread):
+          raise Exception
         await ctx.send("I need `manage_webhook` permissions.")
+        return
     await webh.send(content=emoji, username=ctx.author.name, avatar_url=ctx.author.avatar.url)
 
 def setup(bot):
