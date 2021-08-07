@@ -87,6 +87,7 @@ class MyContext(commands.Context):
         allowed_mentions=None,
         reference=None,
         view=None,
+        stickers=None,
         chb=True
       ):
     try:
@@ -101,7 +102,7 @@ class MyContext(commands.Context):
       else:
         pass
       allowed_mentions=discord.AllowedMentions(roles=False, users=False, everyone=False)
-      return await super().send(content=content, embed=embed, embeds=embeds, file=file, files=files, delete_after=delete_after, allowed_mentions=allowed_mentions, view=view)
+      return await super().send(content=content, embed=embed, embeds=embeds, file=file, files=files, delete_after=delete_after, allowed_mentions=allowed_mentions, view=view, stickers=stickers)
     # except discord.HTTPException:
     except Exception as e:
       print(e)

@@ -368,7 +368,7 @@ async def _think(ctx: SlashContext, seconds=1):
 
 @client.event
 async def on_ready():
-  await client.change_presence(status=discord.Status.idle, activity=discord.Game("CAPhelp | c/help"))
+  await client.change_presence(status=discord.Status.online, activity=discord.Game("CAPhelp | c/help"))
   print(f"Slash Client is Ready CTRL+R {datetime.datetime.utcnow()}")
 
 client.run(os.getenv("TOKEN"))
