@@ -13,6 +13,9 @@ from data.json.help import help_menu
 from handler import ch
 from help import CustomHelp
 from other.mongo import cluster
+from dotenv import load_dotenv
+
+load_dotenv()
 
 extensions = [
   'cogs.commands.General',
