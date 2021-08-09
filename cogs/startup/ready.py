@@ -55,18 +55,18 @@ class StartUp(commands.Cog):
     with open("afk/communicate.txt", "w") as f:
       f.write("")
     self.bot.uptime=datetime.datetime.utcnow()
-#     async def task1():
-#       with concurrent.futures.ThreadPoolExecutor() as pool:
-#         def run():
-#           subprocess.run("python afk/afk.py", shell=True)
-#         await self.bot.loop.run_in_executor(pool, run)
-#     async def task2():
-#       with concurrent.futures.ThreadPoolExecutor() as pool:
-#         def run():
-#           subprocess.run("python 1.7.3/slash.py", shell=True)
-#         await self.bot.loop.run_in_executor(pool, run)
-#     self.bot.loop.create_task(task1())
-#     self.bot.loop.create_task(task2())
+    async def task1():
+      with concurrent.futures.ThreadPoolExecutor() as pool:
+        def run():
+          subprocess.run("python afk/afk.py", shell=True)
+        await self.bot.loop.run_in_executor(pool, run)
+    async def task2():
+      with concurrent.futures.ThreadPoolExecutor() as pool:
+        def run():
+          subprocess.run("python 1.7.3/slash.py", shell=True)
+        await self.bot.loop.run_in_executor(pool, run)
+    self.bot.loop.create_task(task1())
+    self.bot.loop.create_task(task2())
     await func_bitcoin(self)
 
 def setup(bot):
