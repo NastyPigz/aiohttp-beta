@@ -14,6 +14,19 @@ from handler import ch
 from help import CustomHelp
 from other.mongo import cluster
 from dotenv import load_dotenv
+app = Flask('')
+
+@app.route('/')
+def main():
+    return "running"
+
+def run():
+    app.run(host="0.0.0.0", port=8080)
+
+def keep_alive():
+    server = Thread(target=run)
+    server.start()
+keep_alive()
 
 load_dotenv()
 
@@ -28,7 +41,7 @@ extensions = [
   'cogs.startup.error',
   'cogs.commands.Data',
   "cogs.commands.SocialMedia",
-  "cogs.startup.web",
+  # "cogs.startup.web",
   'other.mongo',
   'cogs.growth.growth',
   'jishaku',
