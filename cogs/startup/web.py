@@ -19,7 +19,7 @@ class WebRequest(commands.Cog):
         
     @tasks.loop(seconds=1.0)
     async def vote_request(self):
-      response = await self.session.get("/gv")
+      response = await self.session.get("https://aiohttp-server.nastypigz.repl.co/gv")
       data = await response.json()
       user = data.get('user')
       website = data.get('website')
@@ -40,11 +40,11 @@ class WebRequest(commands.Cog):
     @tasks.loop(seconds=1.0)
     async def update_main(self):
       if self.oldmain != self.maindb:
-        await self.session.post("/pm", json=self.maindb)
+        await self.session.post("https://aiohttp-server.nastypigz.repl.co/pm", json=self.maindb)
         self.oldmain = copy.deepcopy(self.maindb)
     
     @tasks.loop(seconds=1.0)
     async def update_sm(self):
       if self.oldsm != self.smdata:
-        await self.session.post("/ps", json=self.smdata)
+        await self.session.post("https://aiohttp-server.nastypigz.repl.co/ps", json=self.smdata)
         self.oldsm = copy.deepcopy(self.smdata)
