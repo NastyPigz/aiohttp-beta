@@ -174,7 +174,7 @@ class General(commands.Cog):
     for i in collection.find({}):
       users = i
     collection.replace_one({"_id":1}, users)
-    after = time.mofpnotonic() - before
+    after = time.monotonic() - before
     await ctx.send(f"`{round(after*1000)}ms`")
 
   @commands.command()
@@ -236,7 +236,7 @@ class General(commands.Cog):
   async def used(self, ctx):
     try:
       embed=discord.Embed(
-        title=f"{ctx.author}'s bot usage data'",
+        title=f"{ctx.author}'s bot usage data",
         description="__commands__: {:,}".format(self.usersdb[str(ctx.author.id)]["commands"])
       )
       await ctx.send(embed=embed)
@@ -339,9 +339,6 @@ class General(commands.Cog):
   @commands.Cog.listener()
   async def on_command_completion(self, ctx):
     try:
-      list_ = ["bruh","nice","meme","bruhmeme"]
-      string_ = random.choice(list_)+random.choice(list_)+random.choice(list_)
-      self.data[string_] = 1
       result = await self.detc_user(ctx.author)
       if result:
         embed = discord.Embed(
@@ -354,14 +351,14 @@ class General(commands.Cog):
         view = discord.ui.View()
         view.add_item(
           discord.ui.Button(
-            style=discord.ButtonStyle.URL,
+            style=discord.ButtonStyle.link,
             label="Invite me",
             url="https://discord.com/oauth2/authorize?client_id=823699570147065876&permissions=268823670&redirect_uri=https%3A%2F%2Fdiscord.com%2Foauth2%2Fauthorize%3Fclient_id%3DCapitalismBot&scope=bot%20applications.commands"
           )
         )
         view.add_item(
           discord.ui.Button(
-            style=discord.ButtonStyle.URL,
+            style=discord.ButtonStyle.link,
             label="Support Server",
             url="https://discord.gg/capitalism"
           )
@@ -379,15 +376,17 @@ class General(commands.Cog):
       users = self.maindb
       try:
         users[str(user.id)]["exp"]+=1
-      except:
+      except Exception as e:
         pass
       users = self.usersdb
       try:
         users[str(user.id)]["commands"]+=1
         return
       except:
+        users[str(user.id)]["commands"]=1
         return
-    except:
+    except Exception as e:
+      print(e)
       return
 
   async def detc_user(self, user):

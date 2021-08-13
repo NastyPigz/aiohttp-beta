@@ -379,13 +379,17 @@ class CustomHelp(commands.HelpCommand):
           if not str(reaction) == "🇷":
             reaction_ = False
             continue_ = True
-            await reaction.message.clear_reactions()
-            continue
+            try:
+              await reaction.message.clear_reactions()
+            except:
+              pass
           else:
             continue_ = False
             reaction_ = True
-            await reaction.message.clear_reactions()
-            pass
+            try:
+              await reaction.message.clear_reactions()
+            except:
+              pass
       except:
         continue
       embed.add_field(

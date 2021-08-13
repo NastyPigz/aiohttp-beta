@@ -1180,6 +1180,7 @@ class Currency(commands.Cog):
     return[True, name_]
 
   async def use_item(self, user,item_name,amount,price=None):
+      amount = str(amount)
       users = self.maindb
       itemname = item_name.lower()
       name_=None
@@ -1404,7 +1405,7 @@ class Currency(commands.Cog):
         names="[`{}`]".format(shop_items[item_name]["name"][0])
       names = str(names).lstrip("[").rstrip("]")
       em.add_field(
-        name=f"{display_name} ─ {amount} owned",
+        name=f"{display_name} ─ {amount:,} owned",
         value=f"*ID* {names}",
         inline=False
       )

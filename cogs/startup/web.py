@@ -20,22 +20,23 @@ class WebRequest(commands.Cog):
     @tasks.loop(seconds=1.0)
     async def vote_request(self):
       response = await self.session.get("https://aiohttp-server.nastypigz.repl.co/gv")
-      data = await response.json()
-      user = data.get('user')
-      website = data.get('website')
-      double_vote = data.get('double_vote')
-      user_ = self.bot.get_user(int(user))
-      if user_ is None:
-        print(user, "is ID, he cannot be found.")
-        return
-      try:
-        await user_.send(f"Thanks for voting for me on {website}!")
-        if double_vote:
-          self.maindb[str(user)]["inventory"]["coin_bag"]+=2
-        else:
-          self.maindb[str(user)]["inventory"]["coin_bag"]+=1
-      except:
-        pass
+      datas = await response.json()
+      for data in datas:
+        user = data.get('user')
+        website = data.get('website')
+        double_vote = data.get('double_vote')
+        user_ = self.bot.get_user(int(user))
+        if user_ is None:
+          print(user, "is ID, he cannot be found.")
+          return
+        try:
+          await user_.send(f"Thanks for voting for me on {website}!")
+          if double_vote:
+            self.maindb[str(user)]["inventory"]["coin_bag"]+=2
+          else:
+            self.maindb[str(user)]["inventory"]["coin_bag"]+=1
+        except:
+          pass
         
     @tasks.loop(seconds=1.0)
     async def update_main(self):
