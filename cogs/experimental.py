@@ -55,11 +55,6 @@ class experiment(commands.Cog):
 
   @commands.command()
   async def embeds(self, ctx):
-    with open("test.py", 'rb') as fp:
-      file1 = discord.File(fp, filename="test.py")
-    with open("handler.py", "rb") as fp:
-      file2 = discord.File(fp, filename="handler.py")
-    await ctx.send(content="re",files=[file1, file2])
     r=Route('POST', '/channels/{channel_id}/messages', channel_id=ctx.channel.id)
     res = await self.bot.http.request(
       r,

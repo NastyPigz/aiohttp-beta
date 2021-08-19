@@ -1,7 +1,3 @@
-import subprocess
-
-subprocess.run("pip install discord-py-slash-command", shell=True)
-
 import discord, os, datetime, random, asyncio
 from discord.ext import commands
 from discord_slash import SlashCommand, SlashContext
@@ -11,7 +7,10 @@ from data.json.slash import help_slash
 from data.embed.help import embed_
 from data.json.help import help_menu
 from discord_slash.utils import manage_components
+import discord_slash
 from discord_slash.model import ButtonStyle
+from discord_slash.context import MenuContext
+from discord_slash.model import ContextMenuType
 
 def get_cluster():
   load_dotenv()
@@ -202,7 +201,25 @@ options = [{
 "required": False,
 "type": 3
 }]
-  
+
+print(discord_slash.__version__)
+
+@slash.context_menu(target=ContextMenuType.MESSAGE, name="Clean Content")
+async def cleancontent(ctx: MenuContext):
+  await ctx.send(
+    content="Content: ```\n{}```".format(ctx.target_message.content.replace("`", "\BT/")),
+    hidden=True
+  )
+# slash.add_context_menu(cleancontent, _type=ContextMenuType.MESSAGE, name="Clean Content")
+
+@slash.context_menu(target=ContextMenuType.USER, name="User Info")
+async def userinfo(ctx: MenuContext):
+  await ctx.send(
+    content="User: ```\n{}```".format(ctx.target_author),
+    hidden=True
+  )
+# slash.add_context_menu(userinfo, _type=ContextMenuType.USER, name="User Info")
+
 @slash.slash(name="Prefix", description="Gives you the bot prefix", options=[])
 @check_commands
 async def _prefix(ctx: SlashContext):

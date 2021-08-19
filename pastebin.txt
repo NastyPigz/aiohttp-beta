@@ -1,0 +1,17 @@
+if not ctx.author.voice:
+  await ctx.send("be in a voice channel")
+  return
+voice = ctx.author.voice
+app_id = 438122941302046720
+r=Route('POST', '/channels/{channel_id}/invites', channel_id=voice.channel.id)
+res = await self.bot.http.request(r,
+  json={
+    "max_age":86400,
+    "max_uses": 0,
+    "target_application_id": app_id,
+    "target_type": 2,
+    "temporary": False,
+    "validate": None,
+  }
+  )
+await ctx.send("https://discord.com/invite/{}".format(res["code"]))

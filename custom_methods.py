@@ -1,4 +1,4 @@
-def pint(num: int):
+def pint(num: int) -> str:
   try:
     num = int(num)
   except:
