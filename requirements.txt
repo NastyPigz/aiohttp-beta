@@ -6,3 +6,4 @@ image
 python-dotenv
 jishaku
 discord-py-slash-command
+dnspython

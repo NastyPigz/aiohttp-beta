@@ -52,20 +52,20 @@ class StartUp(commands.Cog):
     await self.bot.change_presence(status=discord.Status.idle, activity=discord.Game("CAPhelp | c/help"))
     self.bot.loadng=False
     print("Running")
-    with open("afk/communicate.txt", "w") as f:
-      f.write("")
+    # with open("afk/communicate.txt", "w") as f:
+    #   f.write("")
     self.bot.uptime=datetime.datetime.utcnow()
-    async def task1():
-      with concurrent.futures.ThreadPoolExecutor() as pool:
-        def run():
-          subprocess.run("python afk/afk.py", shell=True)
-        await self.bot.loop.run_in_executor(pool, run)
+    # async def task1():
+    #   with concurrent.futures.ThreadPoolExecutor() as pool:
+    #     def run():
+    #       subprocess.run("python afk/afk.py", shell=True)
+    #     await self.bot.loop.run_in_executor(pool, run)
     async def task2():
       with concurrent.futures.ThreadPoolExecutor() as pool:
         def run():
           subprocess.run("python 1.7.3/slash.py", shell=True)
         await self.bot.loop.run_in_executor(pool, run)
-    self.bot.loop.create_task(task1())
+    # self.bot.loop.create_task(task1())
     self.bot.loop.create_task(task2())
     await func_bitcoin(self)
 

@@ -41,14 +41,14 @@ extensions = [
 ]
 
 os.system("clear")
-logger = logging.getLogger('discord')
-logger.setLevel(logging.DEBUG)
-handler = logging.FileHandler(filename='discord.log',
-                              encoding='utf-8',
-                              mode='w')
-handler.setFormatter(
-    logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
-logger.addHandler(handler)
+# logger = logging.getLogger('discord')
+# logger.setLevel(logging.DEBUG)
+# handler = logging.FileHandler(filename='discord.log',
+#                               encoding='utf-8',
+#                               mode='w')
+# handler.setFormatter(
+#     logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+# logger.addHandler(handler)
 
 async def get_pre(bot, message):
   data = client.logsdb
@@ -325,4 +325,4 @@ async def reload(ctx, *, arg=None):
 for extension in extensions:
 	client.load_extension(extension)
 
-client.run(os.getenv("TOKEN"))
+client.run("ODIzOTMzNDM4MDc5Nzk1MjYw.YFoBzw.HxYegdHARAz4zmsmWXllKOlcuTc")

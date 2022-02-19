@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 def get_cluster():
   load_dotenv()
-  cluster = MongoClient(os.getenv("MONGO"))
+  cluster = MongoClient("mongodb+srv://cap:z67253635@clustercapitalism.wkr0p.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
   return cluster
 
 cluster = get_cluster()

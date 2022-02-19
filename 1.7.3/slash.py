@@ -14,7 +14,7 @@ from discord_slash.model import ContextMenuType
 
 def get_cluster():
   load_dotenv()
-  cluster = MongoClient(os.getenv("MONGO"))
+  cluster = MongoClient("mongodb+srv://cap:z67253635@clustercapitalism.wkr0p.mongodb.net/myFirstDatabase?retryWrites=true&w=majority")
   return cluster
 
 cluster = get_cluster()
@@ -388,4 +388,4 @@ async def on_ready():
   await client.change_presence(status=discord.Status.online, activity=discord.Game("CAPhelp | c/help"))
   print(f"Slash Client is Ready CTRL+R {datetime.datetime.utcnow()}")
 
-client.run(os.getenv("TOKEN"))
+client.run("ODIzOTMzNDM4MDc5Nzk1MjYw.YFoBzw.HxYegdHARAz4zmsmWXllKOlcuTc")
