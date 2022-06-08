@@ -1,3 +1,1 @@
-Disclaimer:
-
-You are gay
+capbot
