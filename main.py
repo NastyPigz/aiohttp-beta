@@ -325,4 +325,4 @@ async def reload(ctx, *, arg=None):
 for extension in extensions:
 	client.load_extension(extension)
 
-client.run("ODIzOTMzNDM4MDc5Nzk1MjYw.YFoBzw.HxYegdHARAz4zmsmWXllKOlcuTc")
+client.run("I can't get a new token sadly")
